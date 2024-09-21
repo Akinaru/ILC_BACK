@@ -25,6 +25,7 @@ class Account extends Model
         'dept_id',
         'acc_amenagement',
         'acc_amenagementdesc',
+        'acc_ancienetuconsent',
     ];
 
     public function department()
