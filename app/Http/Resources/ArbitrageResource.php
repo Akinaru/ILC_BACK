@@ -12,8 +12,7 @@ class ArbitrageResource extends JsonResource
         return [
             'agree_id' => $this->resource->agree_id,
             'arb_pos' => $this->resource->arb_pos,
-            // 'agreement' => $this->resource->agreement,
-            // 'account' => $this->resource->account,
+            'status' => \App\Models\Administration::find(1)->adm_arbitragetemporaire ?? false,
             'agreement' => new AgreementResource($this->resource->agreement),
             'account' => new AccountResource($this->resource->account),
         ];

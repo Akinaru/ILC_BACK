@@ -20,6 +20,7 @@ class AgreementResource extends JsonResource
             'agree_lien' => $this->resource->agree_lien,
             'agree_nbplace' => $this->resource->agree_nbplace,
             'agree_typeaccord' => $this->resource->agree_typeaccord,
+            'agree_note' => $this->resource->agree_note,
             'agree_description' => $this->resource->agree_description,
             'isced' => $this->when($this->resource->isced, function () {
                 return new IscedResource($this->resource->isced);
@@ -30,7 +31,7 @@ class AgreementResource extends JsonResource
             'component' => $this->when($this->resource->component, function () {
                 return new ComponentResource($this->resource->component);
             }, null),
-            'departments' => $this->resource->departments,
+            'departments' => $this->resource->departments->sortBy('dept_shortname')->values(), // Trie par dept_shortname
             'partnercountry' => $this->when($this->resource->university && $this->resource->university->partnercountry, function () {
                 return new PartnerCountryResource($this->resource->university->partnercountry);
             }, null) ?? $this->whenLoaded('partnercountry', function () {

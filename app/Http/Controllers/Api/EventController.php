@@ -23,9 +23,9 @@ class EventController extends Controller
     }
 
     public function presentFuturOnly(){
-        $currentDateTime = now();
-    
-        $events = Event::where('evt_datetime', '>=', $currentDateTime)
+        $currentDate = now()->startOfDay(); // Récupère le début de la journée actuelle
+        
+        $events = Event::where('evt_datetime', '>=', $currentDate)
                         ->orderBy('evt_datetime', 'asc')
                         ->get();
     

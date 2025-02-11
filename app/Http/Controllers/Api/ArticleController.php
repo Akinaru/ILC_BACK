@@ -39,6 +39,7 @@ class ArticleController extends Controller
             $validatedData = $request->validate([
                 'art_title' => 'required|string',
                 'art_description' => 'required|string',
+                'art_datesortie' => 'nullable|date',
                 'art_pin' => 'boolean',
             ]);
     
@@ -47,6 +48,12 @@ class ArticleController extends Controller
             $article->art_title = $validatedData['art_title'];
             $article->art_description = $validatedData['art_description'];
             $article->art_pin = $validatedData['art_pin'];
+            if (isset($validatedData['art_datesortie'])) {
+                $article->art_datesortie = $validatedData['art_datesortie'];
+            }else{
+                $article->art_datesortie = DB::raw('NOW()');
+            }
+            
             $article->save();
 
     
@@ -87,6 +94,7 @@ class ArticleController extends Controller
                 'art_id' => 'required|integer',
                 'art_title' => 'required|string',
                 'art_description' => 'required|string',
+                'art_datesortie' => 'nullable|date',
                 'art_pin' => 'boolean'
             ]);
             $id = $validatedData['art_id'];
@@ -96,6 +104,13 @@ class ArticleController extends Controller
             $article->art_description = $validatedData['art_description'];
             $article->art_pin = $validatedData['art_pin'];
             $article->art_lastmodif = DB::raw('NOW()');
+
+            if (isset($validatedData['art_datesortie'])) {
+                $article->art_datesortie = $validatedData['art_datesortie'];
+            }else{
+                 $article->art_datesortie = DB::raw('NOW()');
+
+             }
             $article->save();
     
     

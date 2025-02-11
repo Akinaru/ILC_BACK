@@ -159,11 +159,9 @@ class AccessController extends Controller
                 ]);
             } else {
                 return response()->json([
-                    'status' => 404,
-                    'role' => null,
-                    'message' => 'No role or department found for the given login.',
+                    'role' => "Aucun",
                     'access_type' => null,
-                    'color' => 'bg-red-500',
+                    'color' => "#aaaaaa",
                 ]);
             }
         }

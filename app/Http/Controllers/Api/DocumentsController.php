@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use App\Models\Account;
 
 class DocumentsController extends Controller
 {
@@ -38,6 +39,15 @@ class DocumentsController extends Controller
             // Stocker le nouveau fichier dans le dossier private
             $file->storeAs($folder, $fileName, 'private');
     
+            if (str_contains($title, 'choix_cours')) {
+                $login = str_replace('choix_cours_', '', $title);
+                $account = Account::where('acc_id', $login)->first();
+                if ($account) {
+                    $account->acc_validechoixcours = false;
+                    $account->save();
+                }
+            }
+
             return response()->json([
                 'status' => 200,
                 'message' => 'Fichier mis en ligne avec succès.',
@@ -50,7 +60,6 @@ class DocumentsController extends Controller
             ], 500);
         }
     }
-    
     
     
     public function checkFileExists($folder, $filename)
@@ -85,6 +94,42 @@ class DocumentsController extends Controller
             'message' => 'Le fichier n\'existe pas.',
         ]);
     }
+
+    public function checkFileExistsPerso($folder, $filename, $login)
+    {
+        // Construire le chemin complet du répertoire
+        $directoryPath = 'documents/' . $folder;
+
+        // Récupérer tous les fichiers dans le répertoire
+        $files = Storage::disk('private')->allFiles($directoryPath);
+
+        // Construire le nom de fichier à vérifier
+        $fullFilename = "{$filename}_{$login}";
+
+        // Parcourir les fichiers pour trouver celui qui correspond au nom donné
+        foreach ($files as $file) {
+            // Extraire le nom du fichier sans l'extension
+            $fileWithoutExtension = pathinfo($file, PATHINFO_FILENAME);
+
+            // Vérifier si le nom du fichier correspond au nom complet
+            if ($fileWithoutExtension === $fullFilename) {
+                // Le fichier a été trouvé, retourner son chemin complet avec l'extension
+                return response()->json([
+                    'status' => 200,
+                    'exists' => true,
+                    'message' => 'Le fichier existe.',
+                    'path' => $file, // Inclut l'extension
+                ]);
+            }
+        }
+
+        // Aucun fichier correspondant n'a été trouvé
+        return response()->json([
+            'status' => 404,
+            'exists' => false,
+            'message' => 'Le fichier n\'existe pas.',
+        ]);
+    }
     
     
     public function getDocument($folder, $filename)
@@ -93,6 +138,33 @@ class DocumentsController extends Controller
     
         // Construire le chemin complet du fichier
         $filePath = storage_path('app/private/documents/' . $folder . '/' . $filename);
+    
+        // Vérifier si le fichier existe
+        if (file_exists($filePath)) {
+            // Créer une réponse binaire pour le fichier
+            $response = new BinaryFileResponse($filePath);
+    
+            // Vérifier si le fichier est un PDF
+            if (strtolower(pathinfo($filename, PATHINFO_EXTENSION)) === 'pdf') {
+                // Désactiver la mise en cache pour le PDF
+                $response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+            } else {
+                // Forcer le téléchargement pour les autres types de fichiers
+                $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, $filename);
+            }
+    
+            // Retourner la réponse
+            return $response;
+        } else {
+            // Retourner une réponse d'erreur si le fichier n'existe pas
+            abort(404);
+        }
+    }
+
+    public function getMyDocument($folder, $filename)
+    {
+        // Construire le chemin complet du fichier
+        $filePath = storage_path('app/private/documents/etu/' . $folder . '/' . $filename);
     
         // Vérifier si le fichier existe
         if (file_exists($filePath)) {
@@ -136,6 +208,15 @@ class DocumentsController extends Controller
                     // Le fichier a été trouvé, on peut maintenant le supprimer
                     Storage::disk('private')->delete($file);
 
+                    if (str_contains($filename, 'choix_cours')) {
+                        $login = str_replace('choix_cours_', '', $filename);
+                        $account = Account::where('acc_id', $login)->first();
+                        if ($account) {
+                            $account->acc_validechoixcours = false;
+                            $account->save();
+                        }
+                    }
+
                     return response()->json([
                         'status' => 200,
                         'message' => 'Fichier supprimé avec succès.',
@@ -156,4 +237,53 @@ class DocumentsController extends Controller
         }
     }
     
+        // Méthode pour supprimer un fichier
+        public function deletePerso($folder, $filename)
+    {
+        try {
+            // Construire le chemin complet du répertoire
+            $directoryPath = 'documents/etu/' . $folder;
+
+            // Récupérer tous les fichiers dans le répertoire
+            $files = Storage::disk('private')->allFiles($directoryPath);
+
+            // Parcourir les fichiers pour trouver celui qui correspond au nom donné sans extension
+            foreach ($files as $file) {
+                // Extraire le nom du fichier sans l'extension
+                $fileWithoutExtension = pathinfo($file, PATHINFO_FILENAME);
+
+                // Vérifier si le nom du fichier correspond au nom donné
+                if ($fileWithoutExtension === $filename) {
+                    // Le fichier a été trouvé, on peut maintenant le supprimer
+                    Storage::disk('private')->delete($file);
+
+                    if (str_contains($filename, 'choix_cours')) {
+                        $login = str_replace('choix_cours_', '', $filename);
+                        $account = Account::where('acc_id', $login)->first();
+                        if ($account) {
+                            $account->acc_validechoixcours = false;
+                            $account->save();
+                        }
+                    }
+
+                    return response()->json([
+                        'status' => 200,
+                        'message' => 'Fichier supprimé avec succès.',
+                    ]);
+                }
+            }
+
+            // Aucun fichier correspondant n'a été trouvé
+            return response()->json([
+                'status' => 404,
+                'error' => 'Fichier non trouvé.',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Une erreur s\'est produite lors de la suppression du fichier.',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
 }

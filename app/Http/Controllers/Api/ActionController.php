@@ -34,58 +34,16 @@ class ActionController extends Controller
             $validatedData = $request->validate([
                 'act_description' => 'required|string',
                 'acc_id' => 'required|string',
-                'dept_id' => 'integer|nullable',
-                'agree_id' => 'integer|nullable',
-                'art_id' => 'integer|nullable',
-                'evt_id' => 'integer|nullable',
-                'access' => 'integer|nullable',
-                'admin' => 'integer|nullable',
+                'act_type' => 'required|string'
             ]); 
             
-            // On enlève tous les champs vides
-            $optionalFields = array_filter($validatedData, function($value, $key) {
-                return in_array($key, ['dept_id', 'agree_id', 'art_id', 'evt_id', 'access', 'admin']) && !is_null($value);
-            }, ARRAY_FILTER_USE_BOTH);
-            
-            // On vérifie s'il y en a qu'un seul
-            if (count($optionalFields) > 1) {
-                return response()->json(['error' => 'Il ne peut y avoir qu\'un seul élément dans les actions.'], 422);
-            }
             
             $action = new Action();
             $action->act_description = $validatedData['act_description'];
             $action->act_date = DB::raw('NOW()');
             $action->acc_id = $validatedData['acc_id'];
+            $action->act_type = $validatedData['act_type'];
             
-            // Attribuer les champs optionnels et définir le type d'action
-            foreach ($optionalFields as $key => $value) {
-                $action->$key = $value;
-                
-                // Définir le type d'action en fonction du champ optionnel non nul
-                switch ($key) {
-                    case 'dept_id':
-                        $action->act_type = 'department';
-                        break;
-                    case 'agree_id':
-                        $action->act_type = 'agreement';
-                        break;
-                    case 'art_id':
-                        $action->act_type = 'article';
-                        break;
-                    case 'evt_id':
-                        $action->act_type = 'event';
-                        break;
-                    case 'access':
-                        $action->act_type = 'access';
-                        break;
-                    case 'admin':
-                        $action->act_type = 'admin';
-                        break;
-                    default:
-                        $action->act_type = $action->act_type; // Garde la valeur actuelle
-                        break;
-                }
-            }
             
             $action->save();
     

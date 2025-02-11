@@ -24,7 +24,7 @@ class ActionResource extends JsonResource
             'art_id' => $this->resource->art_id,
             'evt_id' => $this->resource->evt_id,
 
-            'account' => $this->resource->account,
+            'acc_fullname' => $this->resource->account ? $this->resource->account->acc_fullname : null,
             'department' => $this->resource->department,
             'agreement' => $this->resource->agreement,
             'event' => $this->resource->event,

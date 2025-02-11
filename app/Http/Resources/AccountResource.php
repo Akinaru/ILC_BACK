@@ -28,6 +28,7 @@ class AccountResource extends JsonResource
                 $wishes->wsha_three,
                 $wishes->wsha_four,
                 $wishes->wsha_five,
+                $wishes->wsha_six,
             ])->filter(function ($wish) {
                 return !is_null($wish);
             })->count();
@@ -40,6 +41,7 @@ class AccountResource extends JsonResource
         $wishesArray['count'] = $wishCount;
     
         $roleInfo = $this->getRoleInfo();
+        $docCount = $this->getFileCount();
 
         return [
             'acc_id' => $this->resource->acc_id,
@@ -48,15 +50,23 @@ class AccountResource extends JsonResource
             'acc_studentnum' => $this->resource->acc_studentnum,
             'acc_amenagement' => $this->resource->acc_amenagement,
             'acc_amenagemendesc' => $this->resource->acc_amenagementdesc,
+            'acc_anneemobilite' => $this->resource->acc_anneemobilite,
+            'acc_temoignage' => $this->resource->acc_temoignage,
+            'acc_validechoixcours' => (bool) $this->resource->acc_validechoixcours,
             'acc_toeic' => $this->resource->acc_toeic,
             'acc_mail' => $this->resource->acc_mail,
+            'acc_parcours' => $this->resource->acc_parcours,
             'acc_validateacc' => (bool) $this->resource->acc_validateacc,
             'department' => $this->resource->department,
             'access' => $this->resource->access,
             'role' => $roleInfo,
+            'documents' => $docCount,
             'arbitrage' => $this->resource->arbitrage 
-            ? new AgreementResource($this->resource->arbitrage->agreement) 
-            : null,
+                ? [
+                    ...(new AgreementResource($this->resource->arbitrage->agreement))->toArray($request),
+                    'status' => \App\Models\Administration::find(1)->adm_arbitragetemporaire ?? false
+                ] 
+                : null,
             'wishes' => $wishesArray,
         ];
     }

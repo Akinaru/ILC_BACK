@@ -1,0 +1,29 @@
+<?php
+
+
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, GET, DELETE, PUT, PATCH, OPTIONS');
+header('Access-Control-Allow-Headers: X-Requested-With');
+header("Content-Type: application/json");
+
+$user = $_GET["login"];
+
+
+
+$server = "ldap://srv-tyke.iut-acy.local";
+$ds=ldap_connect($server) or die("Impossible de se connecter au serveur AD");
+ldap_set_option($ds, LDAP_OPT_PROTOCOL_VERSION, 3);
+ldap_set_option($ds, LDAP_OPT_REFERRALS, 0);
+ldap_bind($ds,"connecteur-AD-info@iut-acy.local","ad-info!") or die ("Impossible de s'authentifier sur AD!");
+$dn = "OU=CG,DC=iut-acy,DC=local";
+$att=array("sn","givenname");
+$filter = "sAMAccountName=$user";
+$result = ldap_search($ds, $dn, $filter, $att);
+$info = ldap_get_entries($ds, $result);
+$lastname = $info[0]["sn"][0];
+$firstname = $info[0]["givenname"][0];
+$dn = $info[0]["dn"];
+$year = substr($dn,strpos($dn,"OU=")+6, 1);
+
+
+echo json_encode($info);

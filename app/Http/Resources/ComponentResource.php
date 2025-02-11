@@ -18,7 +18,7 @@ class ComponentResource extends JsonResource
             'comp_id' => $this->resource->comp_id,
             'comp_name' => $this->resource->comp_name,
             'comp_shortname' => $this->resource->comp_shortname,
-            'departments' => $this->resource->departments
+            'departments' => $this->resource->departments->sortBy('dept_shortname')->values()
         ];
     }
 }

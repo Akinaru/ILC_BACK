@@ -22,7 +22,8 @@ class Agreement extends Model
         'agree_lien',
         'agree_description',
         'agree_nbplace',
-        'agree_typeaccord'
+        'agree_typeaccord',
+        'agree_note',
     ];
     public function departments()
     {

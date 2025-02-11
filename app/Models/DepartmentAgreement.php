@@ -18,7 +18,7 @@ class DepartmentAgreement extends Model
     protected $fillable = [
         'deptagree_id',
         'agree_id',
-        'acc_id',
-        'arb_pos'
+        'deptagree_valide',
+        'dept_id'
     ];
 }

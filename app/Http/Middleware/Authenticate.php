@@ -12,6 +12,6 @@ class Authenticate extends Middleware
      */
     protected function redirectTo(Request $request): ?string
     {
-        return $request->expectsJson() ? null : route('login');
+            abort(response()->json(['status' => 401, 'message' => 'Accès refusé. Vous devez être connecté pour effectuer cette action.'], 401));
     }
 }

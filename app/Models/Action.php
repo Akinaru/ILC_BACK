@@ -28,7 +28,7 @@ class Action extends Model
         'admin'
     ];
 
-    public function account()
+    public function compte()
     {
         return $this->hasOne(Account::class, 'acc_id', 'acc_id');
     } 

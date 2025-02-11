@@ -60,6 +60,48 @@ class AcceptedAccountController extends Controller
         }
     }
 
+    public function storeImport(Request $request)
+    {
+        try {
+            $requestData = $request->all();
+            $addedAccounts = [];
+            $existingAccounts = [];
+            $invalidAccounts = [];
+    
+            foreach ($requestData as $data) {
+                if (!isset($data['acc_id']) || empty($data['acc_id'])) {
+                    $invalidAccounts[] = $data;
+                    continue;
+                }
+    
+                $existingAccepted = AcceptedAccount::where('acc_id', $data['acc_id'])->first();
+                if ($existingAccepted) {
+                    $existingAccounts[] = $data['acc_id'];
+                } else {
+                    $acceptedaccount = new AcceptedAccount();
+                    $acceptedaccount->acc_id = $data['acc_id'];
+                    $acceptedaccount->save();
+                    $addedAccounts[] = $data['acc_id'];
+                }
+            }
+    
+            return response()->json([
+                'status' => 201,
+                'message' => 'Importation des étudiants terminée.',
+                'added_accounts' => $addedAccounts,
+                'existing_accounts' => $existingAccounts,
+                'invalid_accounts' => $invalidAccounts
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Une erreur s\'est produite lors de l\'importation.',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+    
+
+
     public function delete(Request $request)
     {
         

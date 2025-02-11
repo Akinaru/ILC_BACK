@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use App\Http\Resources\AccountResource;
 use App\Models\Account;
 use App\Models\Access;
+use App\Models\WishAgreement;
+use App\Models\AcceptedAccount;
+use App\Models\Arbitrage;
 use Illuminate\Support\Facades\DB;
 use App\Exports\AccountExport;
 use Maatwebsite\Excel\Facades\Excel;
@@ -40,9 +43,14 @@ class AccountController extends Controller
 
     public function getByLogin($login)
     {
-        $succes = Account::findOrFail($login);
-        return new AccountResource($succes);
+        try {
+            $account = Account::findOrFail($login);
+            return new AccountResource($account);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['status' => 404, 'error' => 'Compte introuvable']);
+        }
     }
+    
 
     public function getByDept($dept_id)
     {
@@ -71,6 +79,12 @@ class AccountController extends Controller
             $account->acc_id = $validatedData['acc_id'];
             $account->acc_fullname = $validatedData['acc_fullname'];
             $account->save();
+
+            
+            $account->tokens()->delete();
+
+            // Créer le token
+            $token = $account->createToken('auth-token')->plainTextToken;
     
             // Vérifier s'il existe un enregistrement Access associé à ce compte
             $access = Access::where('acc_id', $account->acc_id)->first();
@@ -81,6 +95,7 @@ class AccountController extends Controller
                 'status'=> 201,
                 'message' => 'Compte créé avec succès',
                 'account' => $account,
+                'token' => $token,
                 'access' => $access ? $access->acs_accounttype : 0
             ]);
         } catch (\Exception $e) {
@@ -91,15 +106,71 @@ class AccountController extends Controller
         }
     }
 
-    public function modif(Request $request)
+    public function temoignage(Request $request)
+    {
+        try {
+            $validatedData = $request->validate([
+                'acc_id' => 'required|string',
+                'acc_temoignage' => 'nullable|string',  // Changé pour permettre null
+            ]);
+    
+            // Trouver le compte
+            $account = Account::find($validatedData['acc_id']);
+            
+            if (!$account) {
+                return response()->json([
+                    'status' => 404,
+                    'message' => 'Compte non trouvé',
+                ]);
+            }
+    
+            // Mise à jour du témoignage
+            $account->acc_temoignage = $validatedData['acc_temoignage'];
+            $account->save();
+    
+            return response()->json([
+                'status' => 200,
+                'message' => 'Témoignage modifié avec succès !',
+                'account' => $account,
+                'merde' => $validatedData['acc_temoignage']
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Une erreur s\'est produite lors de la modification du témoignage.',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function validateChoixCours($id)
+    {
+        $account = Account::find($id);
+        
+        if (!$account) {
+            return response()->json(['status' => 404, 'message' => 'Compte non trouvé.']);
+        }
+        
+        $account->acc_validechoixcours = !$account->acc_validechoixcours;
+        $account->save();
+        
+        $succes = Account::findOrFail($id);
+        return response()->json([
+            'status' => 200,
+            'message' => $account->acc_validechoixcours 
+                ? 'Les choix de cours ont été validés avec succès.' 
+                : 'La validation des choix de cours a été annulée.',
+        ]);
+    }
+
+
+    public function modifEtu(Request $request)
     {
         // Valider les données de la requête
         $validatedData = $request->validate([
             'acc_id' => 'required|string',
             'acc_studentnum' => 'required|integer',
-            'dept_id' => 'nullable|integer',
+            'acc_parcours' => 'nullable|string',
             'acc_mail' => 'string',
-            'acc_toeic' => 'required|integer',
         ]);
 
         // Trouver le compte
@@ -111,9 +182,42 @@ class AccountController extends Controller
 
         // Mettre à jour les propriétés du compte
         $account->acc_studentnum = $validatedData['acc_studentnum'];
+        $account->acc_parcours = $validatedData['acc_parcours'];
+        $account->acc_mail = $validatedData['acc_mail'] ?? $account->acc_mail;
+
+        // Sauvegarder les modifications
+        $account->save();
+
+        return response()->json(['status' => 200, 'message' => 'Le compte a été modifié avec succès.']);
+    }
+
+    public function modif(Request $request)
+    {
+        // Valider les données de la requête
+        $validatedData = $request->validate([
+            'acc_id' => 'required|string',
+            'acc_studentnum' => 'required|integer',
+            'acc_anneemobilite' => 'nullable|string',
+            'dept_id' => 'nullable|integer',
+            'acc_mail' => 'string',
+            'acc_toeic' => 'required|integer',
+            'acc_parcours' => 'nullable|string',
+        ]);
+
+        // Trouver le compte
+        $account = Account::find($validatedData['acc_id']);
+
+        if (!$account) {
+            return response()->json(['error' => 'Compte introuvable'], 404);
+        }
+
+        // Mettre à jour les propriétés du compte
+        $account->acc_studentnum = $validatedData['acc_studentnum'];
+        $account->acc_anneemobilite = $validatedData['acc_anneemobilite'];
         $account->dept_id = isset($validatedData['dept_id']) ? $validatedData['dept_id'] : null;
         $account->acc_mail = $validatedData['acc_mail'] ?? $account->acc_mail;
         $account->acc_toeic = $validatedData['acc_toeic'];
+        $account->acc_parcours = $validatedData['acc_parcours'];
 
         // Sauvegarder les modifications
         $account->save();
@@ -121,13 +225,92 @@ class AccountController extends Controller
         return response()->json(['status' => 200, 'message' => 'Le compte a été modifié avec succès.']);
     }
     
+    public function deleteById($id)
+    {
+
+
+        $account = Account::find($id);
+    
+        if (!$account) {
+            return response()->json(['status' => 404, 'message' => 'Compte non trouvée.']);
+        }
+        $access = Access::where('acc_id', $id)->first();
+        if ($access) {
+            $access->delete();
+        }
+        $acceptedaccount = AcceptedAccount::where('acc_id', $id)->first();
+        if ($acceptedaccount) {
+            $acceptedaccount->delete();
+        }
+        $voeux = WishAgreement::where('acc_id', $id)->first();
+        if ($voeux) {
+            $voeux->delete();
+        }
+        $arbitrage = Arbitrage::where('acc_id', $id)->first();
+        if ($arbitrage) {
+            $arbitrage->delete();
+        }
+    
+        $account->delete();
+
+        // Appel des méthodes deletePerso dans le DocumentController
+        $documentController = new DocumentsController();
+        $documentController->deletePerso('choix_cours', 'choix_cours_'.$id);
+        $documentController->deletePerso('contrat_peda', 'contrat_peda_'.$id);
+        $documentController->deletePerso('releve_note', 'releve_note_'.$id);
+    
+        return response()->json(['status' => 202, 'message' => 'Le compte a été supprimée avec succès.']);
+    }
+
+    public function selfDelete(Request $request)
+    {
+
+        $validatedData = $request->validate([
+            'acc_id' => 'required|string',
+        ]);
+        
+        $request->user()->currentAccessToken()->delete();
+        $id = $validatedData['acc_id'];
+
+        $account = Account::find($id);
+    
+        if (!$account) {
+            return response()->json(['status' => 404, 'message' => 'Compte non trouvée.']);
+        }
+        $access = Access::where('acc_id', $id)->first();
+        if ($access) {
+            $access->delete();
+        }
+        $acceptedaccount = AcceptedAccount::where('acc_id', $id)->first();
+        if ($acceptedaccount) {
+            $acceptedaccount->delete();
+        }
+        $voeux = WishAgreement::where('acc_id', $id)->first();
+        if ($voeux) {
+            $voeux->delete();
+        }
+        $arbitrage = Arbitrage::where('acc_id', $id)->first();
+        if ($arbitrage) {
+            $arbitrage->delete();
+        }
+    
+        $account->delete();
+
+        // Appel des méthodes deletePerso dans le DocumentController
+        $documentController = new DocumentsController();
+        $documentController->deletePerso('choix_cours', 'choix_cours_'.$id);
+        $documentController->deletePerso('contrat_peda', 'contrat_peda_'.$id);
+        $documentController->deletePerso('releve_note', 'releve_note_'.$id);
+    
+        return response()->json(['status' => 202, 'message' => 'Le compte a été supprimée avec succès.']);
+    }
        
     public function login($id)
     {
         $account = Account::find($id);
 
         if (!$account) {
-            return response()->json(['message' => 'Compte non trouvé.'], 404);
+            return response()->json(['status' => 404, 'message' => 'Compte non trouvé.']);
         }
 
         $account->acc_lastlogin = DB::raw('NOW()');
@@ -175,7 +358,10 @@ class AccountController extends Controller
                 'acc_studentnum' => 'required|string',
                 'dept_id' => 'required|integer',
                 'acc_amenagement' => 'required|boolean',
+                'acc_anneemobilite' => 'required|string',
+                'acc_mail' => 'required|string',
                 'acc_amenagementdesc' => 'nullable|string',
+                'acc_parcours' => 'nullable|string',
                 'acc_consent' => 'required|boolean',
             ]);
 
@@ -187,10 +373,15 @@ class AccountController extends Controller
             }
 
             $account->acc_studentnum = $validatedData['acc_studentnum'];
+            $account->acc_mail = $validatedData['acc_mail'];
+            $account->acc_anneemobilite = $validatedData['acc_anneemobilite'];
             $account->dept_id = $validatedData['dept_id'];
             $account->acc_amenagement = $validatedData['acc_amenagement'];
             if(isset($validatedData['acc_amenagementdesc'])){
                 $account->acc_amenagementdesc = $validatedData['acc_amenagementdesc'];
+            }
+            if(isset($validatedData['acc_parcours'])){
+                $account->acc_parcours = $validatedData['acc_parcours'];
             }
             $account->acc_consent = $validatedData['acc_consent'];
             $account->acc_validateacc = true;

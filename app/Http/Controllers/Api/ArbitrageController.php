@@ -48,5 +48,22 @@ class ArbitrageController extends Controller
         return response()->json(['status' => 404, 'message' => 'Arbitrage introuvable']);
     }
     
-    
+    public function modifArbitrage(Request $request){
+        $validated = $request->validate([
+            'acc_id' => 'required|string',
+            'agree_id' => 'required|integer',
+            'arb_pos' => 'required|integer',
+        ]);
+        
+        // Vérifier et supprimer l'arbitrage existant pour acc_id
+        Arbitrage::where('acc_id', $validated['acc_id'])->delete();
+
+        // Créer le nouvel arbitrage
+        $arbitrage = Arbitrage::create([
+            'acc_id' => $validated['acc_id'],
+            'agree_id' => $validated['agree_id'],
+            'arb_pos' => $validated['arb_pos'],
+        ]);
+        return response()->json(['status' => 200, 'message' => 'Destination changée pour ' . $validated['acc_id'] . '.']);
+    }
 }

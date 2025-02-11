@@ -36,4 +36,27 @@ class AdministrationController extends Controller
         $admin->save();
         return response()->json(['status'=> 200 ,'message' => 'Date limite modifiée à '.$admin->adm_datelimite.'.']);
     }
+    
+
+    public function changeArbitrageStatus(Request $request)
+    {
+        $validatedData = $request->validate([
+            'adm_arbitragetemporaire' => 'required|boolean',
+        ]);
+    
+        $admin = Administration::find(1);
+        if (!$admin) {
+            $admin = new Administration();
+            $admin->adm_id = 1;
+        }
+    
+        $admin->adm_arbitragetemporaire = $validatedData['adm_arbitragetemporaire'];
+        $admin->save();
+    
+        $statusText = $admin->adm_arbitragetemporaire ? 'Temporaire' : 'Définitif';
+        return response()->json([
+            'status' => 200,
+            'message' => 'Status de l\'arbitrage changé à : ' . $statusText
+        ]);
+    }
 }

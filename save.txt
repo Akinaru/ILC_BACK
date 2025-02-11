@@ -1,0 +1,1 @@
+mysqldump -u aki -p ilc > /var/www/html/ilc/BACK/ilc_backup.sql;

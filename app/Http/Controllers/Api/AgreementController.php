@@ -43,7 +43,7 @@ class AgreementController extends Controller
     }
     
 
-    public function random(Request $request)
+public function random(Request $request)
 {
     try {
         $dept_id = $request->query('dept_id');
@@ -116,8 +116,8 @@ public function getById($id)
             $validatedData = $request->validate([
                 'agree_lien' => 'string',
                 'agree_description' => 'string',
-                'agree_nbplace' => 'required|integer',
-                'agree_typeaccord' => 'required|string',
+                'agree_nbplace' => 'integer',
+                'agree_typeaccord' => 'string',
                 'isc_id' => 'required_without:newisced.isc_code|integer',
                 'newisced.isc_code' => 'required_without:isc_id|string',
                 'newisced.isc_name' => 'required_without:isc_id|string',
@@ -229,6 +229,131 @@ public function getById($id)
         }
     }
     
+    public function storeImport(Request $request)
+    {
+        try {
+            // Validation des données
+            $validatedData = $request->validate([
+                'agreements' => 'required|array',
+                'agreements.*.agree_lien' => 'nullable|string',
+                'agreements.*.agree_description' => 'nullable|string',
+                'agreements.*.agree_nbplace' => 'nullable|integer',
+                'agreements.*.agree_typeaccord' => 'nullable|string',
+                'agreements.*.isced.isc_id' => 'nullable|integer',
+                'agreements.*.isced.isc_code' => 'nullable|string',
+                'agreements.*.isced.isc_name' => 'nullable|string',
+                'agreements.*.component.comp_id' => 'nullable|integer',
+                'agreements.*.component.comp_name' => 'nullable|string',
+                'agreements.*.component.comp_shortname' => 'nullable|string',
+                'agreements.*.university.univ_id' => 'nullable|integer',
+                'agreements.*.university.univ_name' => 'nullable|string',
+                'agreements.*.university.univ_city' => 'nullable|string',
+                'agreements.*.partnercountry.parco_id' => 'nullable|integer',
+                'agreements.*.partnercountry.parco_name' => 'nullable|string',
+                'agreements.*.partnercountry.parco_code' => 'nullable|string',
+                'agreements.*.departments' => 'nullable|array',
+                'agreements.*.departments.*.dept_id' => 'nullable|integer',
+                'agreements.*.departments.*.dept_shortname' => 'nullable|string',
+            ]);
+    
+            // Itération sur chaque accord
+            foreach ($validatedData['agreements'] as $data) {
+                // Gestion du champ ISC
+                $iscId = null;
+                if (!empty($data['isced']['isc_id'])) {
+                    $iscId = $data['isced']['isc_id'];
+                } elseif (!empty($data['isced']['isc_code']) && !empty($data['isced']['isc_name'])) {
+                    $isc = new Isced();
+                    $isc->isc_code = $data['isced']['isc_code'];
+                    $isc->isc_name = $data['isced']['isc_name'];
+                    $isc->save();
+                    $iscId = $isc->isc_id;
+                }
+    
+                // Gestion de la composante
+                $compId = null;
+                if (!empty($data['component']['comp_id'])) {
+                    $compId = $data['component']['comp_id'];
+                } elseif (!empty($data['component']['comp_name']) && !empty($data['component']['comp_shortname'])) {
+                    $comp = new Component();
+                    $comp->comp_name = $data['component']['comp_name'];
+                    $comp->comp_shortname = $data['component']['comp_shortname'];
+                    $comp->save();
+                    $compId = $comp->comp_id;
+                }
+    
+                // Gestion de l'université
+                $univId = null;
+                if (!empty($data['university']['univ_id'])) {
+                    $univId = $data['university']['univ_id'];
+                } elseif (!empty($data['university']['univ_name']) && !empty($data['university']['univ_city'])) {
+                    $univ = new University();
+                    $univ->univ_name = $data['university']['univ_name'];
+                    $univ->univ_city = $data['university']['univ_city'];
+                    $univ->parco_id = $data['partnercountry']['parco_id'] ?? null;
+                    $univ->save();
+                    $univId = $univ->univ_id;
+                }
+    
+                // Gestion du pays partenaire
+                $parcoId = null;
+                if (!empty($data['partnercountry']['parco_id'])) {
+                    $parcoId = $data['partnercountry']['parco_id'];
+                } elseif (!empty($data['partnercountry']['parco_name']) && !empty($data['partnercountry']['parco_code'])) {
+                    $parco = new PartnerCountry();
+                    $parco->parco_name = $data['partnercountry']['parco_name'];
+                    $parco->parco_code = $data['partnercountry']['parco_code'];
+                    $parco->save();
+                    $parcoId = $parco->parco_id;
+                }
+    
+                // Vérifier si univ_id est null
+                if (is_null($univId)) {
+                    continue; // Passer à l'accord suivant
+                }
+    
+                // Créer l'accord
+                $agreement = new Agreement();
+                $agreement->agree_nbplace = $data['agree_nbplace'];
+                $agreement->agree_typeaccord = $data['agree_typeaccord'];
+                $agreement->agree_lien = $data['agree_lien'];
+                $agreement->agree_description = $data['agree_description'];
+                $agreement->isc_id = $iscId;
+                $agreement->comp_id = $compId;
+                $agreement->univ_id = $univId;
+                $agreement->save();
+    
+                // Lier les départements à l'accord
+                if (!empty($data['departments'])) {
+                    foreach ($data['departments'] as $dept) {
+                        if (!empty($dept['dept_id'])) {
+                            $deptAgree = new DepartmentAgreement();
+                            $deptAgree->deptagree_id = null; // Gérer l'auto-incrémentation si nécessaire
+                            $deptAgree->agree_id = $agreement->agree_id;
+                            $deptAgree->dept_id = $dept['dept_id'];
+                            $deptAgree->deptagree_valide = true; // Ajuster si nécessaire
+                            $deptAgree->save();
+                        } elseif (!empty($dept['dept_shortname'])) {
+                            // Logique pour gérer les nouveaux départements, si nécessaire
+                        }
+                    }
+                }
+            }
+    
+            return response()->json(['status' => 201, 'message' => 'Les accords ont été ajoutés avec succès.']);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Une erreur s\'est produite lors de l\'ajout des accords.',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    
+    
+
+    
+
 
     public function update(Request $request, $id)
     {
@@ -236,19 +361,12 @@ public function getById($id)
             $validatedData = $request->validate([
                 'agree_lien' => 'string|nullable',
                 'agree_description' => 'string|nullable',
-                'agree_nbplace' => 'required|integer',
-                'agree_typeaccord' => 'required|string',
-                'isc_id' => 'required_without:newisced.isc_code|integer',
-                'newisced.isc_code' => 'required_without:isc_id|string',
-                'newisced.isc_name' => 'required_without:isc_id|string',
-
-                'comp_id' => 'required_without:newcompo.comp_name|integer',
-                'newcompo.comp_name' => 'required_without:comp_id|string',
-                'newcompo.comp_shortname' => 'required_without:comp_id|string',
-
-                'univ_id' => 'required_without:newuniv.univ_name|integer',
-                'newuniv.univ_name' => 'required_without:univ_id|string',
-                'newuniv.univ_city' => 'required_without:univ_id|string',
+                'agree_note' => 'string|nullable',
+                'agree_nbplace' => 'integer',
+                'agree_typeaccord' => 'string',
+                'isc_id' => 'integer|nullable',
+                'comp_id' => 'integer|nullable',
+                'univ_id' => 'integer|nullable',
 
                 'newuniv.parco_id' => 'integer|nullable',
                 'newuniv.parco_name' => 'string|nullable',
@@ -257,52 +375,9 @@ public function getById($id)
 
             $agreement = Agreement::findOrFail($id);
 
-            if (isset($validatedData['newisced'])) {
-                $newIsced = new Isced();
-                $newIsced->isc_code = $validatedData['newisced']['isc_code'];
-                $newIsced->isc_name = $validatedData['newisced']['isc_name'];
-                $newIsced->save();
-
-                $iscId = $newIsced->isc_id;
-            } else {
-                $iscId = $validatedData['isc_id'];
-            }
-
-            if (isset($validatedData['newcompo'])) {
-                $newCompo = new Component();
-                $newCompo->comp_name = $validatedData['newcompo']['comp_name'];
-                $newCompo->comp_shortname = $validatedData['newcompo']['comp_shortname'];
-                $newCompo->save();
-
-                $compoId = $newCompo->comp_id;
-            } else {
-                $compoId = $validatedData['comp_id'];
-            }
-
-            if (isset($validatedData['newuniv'])) {
-                if (isset($validatedData['newuniv']['parco_id'])) {
-                    $parcoId = $validatedData['newuniv']['parco_id'];
-                } else {
-                    $newParco = new PartnerCountry();
-                    $newParco->parco_name = $validatedData['newuniv']['parco_name'];
-                    $newParco->parco_code = $validatedData['newuniv']['parco_code'];
-                    $newParco->save();
-                    $parcoId = $newParco->parco_id;
-                }
-                $newUniv = new University();
-                $newUniv->univ_name = $validatedData['newuniv']['univ_name'];
-                $newUniv->univ_city = $validatedData['newuniv']['univ_city'];
-                $newUniv->parco_id = $parcoId;
-                $newUniv->save();
-
-                $univId = $newUniv->univ_id;
-            } else {
-                $univId = $validatedData['univ_id'];
-            }
-
-            $agreement->isc_id = $iscId;
-            $agreement->comp_id = $compoId;
-            $agreement->univ_id = $univId;
+            $agreement->isc_id = $validatedData['isc_id'];
+            $agreement->comp_id = $validatedData['comp_id'];
+            $agreement->univ_id = $validatedData['univ_id'];
             $agreement->agree_nbplace = $validatedData['agree_nbplace'];
             $agreement->agree_typeaccord = $validatedData['agree_typeaccord'];
             if (isset($validatedData['agree_lien'])) {
@@ -314,6 +389,11 @@ public function getById($id)
                 $agreement->agree_description = $validatedData['agree_description'];
             } else {
                 $agreement->agree_description = null;
+            }
+            if (isset($validatedData['agree_note'])) {
+                $agreement->agree_note = $validatedData['agree_note'];
+            } else {
+                $agreement->agree_note = null;
             }
             $agreement->save();
 
@@ -327,6 +407,30 @@ public function getById($id)
             ], 500);
         }
     }
+
+    public function deleteAll(Request $request)
+    {
+        try {
+            // Récupérer tous les accords
+            $agreements = Agreement::all();
+    
+            if ($agreements->isEmpty()) {
+                return response()->json(['message' => 'Aucun accord à supprimer.'], 400);
+            }
+    
+            foreach ($agreements as $agreement) {
+                $this->deleteById($agreement->agree_id);
+            }
+    
+            return response()->json(['status' => 202, 'message' => 'Tous les accords ont été supprimés avec succès.']);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Une erreur s\'est produite lors de la suppression des accords.',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+    
 
         
     public function deleteById($id)

@@ -3,14 +3,20 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
-class Account extends Model
+class Account extends Authenticatable 
 {
-    use HasFactory;
+    use HasApiTokens, HasFactory;
     protected $table = 't_e_account_acc';
 
     protected $primaryKey = 'acc_id';
+    protected $keyType = 'string';
     public $timestamps = false;
     public $incrementing = false; 
 
@@ -22,10 +28,14 @@ class Account extends Model
         'acc_validateacc',
         'acc_toeic',
         'acc_mail',
+        'acc_parcours',
+        'acc_validechoixcours',
         'dept_id',
         'acc_amenagement',
         'acc_amenagementdesc',
         'acc_ancienetuconsent',
+        'acc_anneemobilite',
+        'acc_temoignage',
     ];
 
     public function department()
@@ -42,6 +52,15 @@ class Account extends Model
     {
         return $this->hasOne(Arbitrage::class, 'acc_id', 'acc_id');
     } 
+
+    public function hasRole($role)
+    {
+        return match($role) {
+            'admin' => $this->access?->acs_accounttype === 1,
+            'chefdept' => $this->access?->acs_accounttype === 1 || $this->access?->acs_accounttype === 2,
+            default => false
+        };
+    }
 
     public function getRoleInfo()
     {
@@ -87,7 +106,50 @@ class Account extends Model
         }
     }
 
-    
+    public function getFileCount()
+    {
+        // Dossiers à vérifier
+        $folders = ['choix_cours', 'contrat_peda', 'releve_note'];
+        $login = $this->acc_id; // Utilise le login de l'utilisateur (ex: tsanevp)
+        $fileSummary = [];
+        $totalFiles = 0;
+
+        // Parcourir chaque dossier
+        foreach ($folders as $folder) {
+            // Construire le chemin complet du répertoire
+            $directoryPath = "documents/etu/{$folder}";
+
+            // Récupérer tous les fichiers dans le répertoire
+            $files = Storage::disk('private')->allFiles($directoryPath);
+
+            // Construire le nom de fichier attendu (ex: choix_cours_tsanevp)
+            $expectedFilePrefix = "{$folder}_{$login}";
+            $fileFound = null;
+
+            // Parcourir les fichiers pour trouver celui qui commence par le préfixe attendu
+            foreach ($files as $file) {
+                // Extraire le nom du fichier sans l'extension
+                $fileWithoutExtension = pathinfo($file, PATHINFO_FILENAME);
+
+                // Utiliser Str::startsWith pour vérifier si le fichier commence par le préfixe attendu
+                if (Str::startsWith($fileWithoutExtension, $expectedFilePrefix)) {
+                    $fileFound = $file; // Chemin complet du fichier
+                    $totalFiles++; // Incrémenter le nombre total de fichiers trouvés
+                    break; // On arrête la recherche dès qu'on trouve un fichier
+                }
+            }
+
+            // Ajouter le résultat pour ce dossier au résumé
+            $fileSummary[$folder] = $fileFound ? Storage::disk('private')->url($fileFound) : null;
+        }
+
+        // Ajouter le nombre total de fichiers au résumé
+        $fileSummary['count'] = $totalFiles;
+        $fileSummary['countmax'] = 3;
+
+        // Retourner le résumé
+        return $fileSummary;
+    }
 
     public function wishes()
     {

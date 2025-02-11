@@ -16,6 +16,7 @@ class AdministrationResource extends JsonResource
     {
         return [
             'adm_datelimite' => $this->resource->adm_datelimite,
+            'adm_arbitragetemporaire' => $this->resource->adm_arbitragetemporaire,
         ];
     }
 }
