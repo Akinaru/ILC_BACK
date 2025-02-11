@@ -28,32 +28,31 @@ class ActionController extends Controller
         return ActionResource::collection($actions);
     }
 
-    public function paginateActions($perPage = 10)
-{
-    try {
-        // Valider et limiter le nombre d'éléments par page
-        $perPage = min(max((int)$perPage, 1), 100); // Entre 1 et 100
-        
-        $actions = Action::orderBy('act_date', 'desc')
-            ->paginate($perPage);
+    public function paginateActions($perPage = 25) // Changé de 10 à 25
+    {
+        try {
+            $perPage = min(max((int)$perPage, 1), 100);
             
-        return response()->json([
-            'status' => 200,
-            'data' => $actions->items(),
-            'pagination' => [
-                'current_page' => $actions->currentPage(),
-                'per_page' => $actions->perPage(),
-                'total' => $actions->total(),
-                'last_page' => $actions->lastPage()
-            ]
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'error' => 'Une erreur s\'est produite lors de la récupération des actions.',
-            'message' => $e->getMessage()
-        ], 500);
+            $actions = Action::orderBy('act_date', 'desc')
+                ->paginate($perPage);
+                
+            return response()->json([
+                'status' => 200,
+                'data' => $actions->items(),
+                'pagination' => [
+                    'current_page' => $actions->currentPage(),
+                    'per_page' => $actions->perPage(),
+                    'total' => $actions->total(),
+                    'last_page' => $actions->lastPage()
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Une erreur s\'est produite lors de la récupération des actions.',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
-}
 
     public function store(Request $request)
     {
