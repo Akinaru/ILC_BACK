@@ -43,6 +43,7 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
 /** Routes action */
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::get('/action', [ActionController::class, 'index']);
+    Route::get('/action/paginate/{perPage?}', [ActionController::class, 'paginateActions']);
     Route::get('/action/getbyid/{id}', [ActionController::class, 'getById']);
     Route::get('/action/getbylogin/{login}', [ActionController::class, 'getByLogin']);
     Route::post('/action', [ActionController::class, 'store']);
