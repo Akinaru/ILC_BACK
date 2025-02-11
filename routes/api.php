@@ -136,15 +136,15 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/account', [AccountController::class, 'index']);
     Route::get('/account/students', [AccountController::class, 'students']);
-    Route::get('/account/getbylogin/{login}', [AccountController::class, 'getByLogin']);
     Route::get('/account/getbydept/{dept_id}', [AccountController::class, 'getByDept']);
     Route::put('/account/temoignage', [AccountController::class, 'temoignage']);
     Route::put('/account/modifetu', [AccountController::class, 'modifEtu']);
-    Route::put('/account/compldossier', [AccountController::class, 'complDossier']);
     Route::delete('/account/selfdelete', [AccountController::class, 'selfDelete']);
-
+    
 });
 
+Route::get('/account/getbylogin/{login}', [AccountController::class, 'getByLogin']);
+Route::put('/account/compldossier', [AccountController::class, 'complDossier']);
 Route::post('/account', [AccountController::class, 'store']);
 Route::put('/account/login/{login}', [AccountController::class, 'login']);
 
