@@ -60,8 +60,8 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::put('/agreement/{id}', [AgreementController::class, 'update']);
     Route::delete('/agreement/deletebyid/{id}', [AgreementController::class, 'deleteById']);
     Route::delete('/agreement/deleteall', [AgreementController::class, 'deleteAll']);
-    Route::get('/agreement/export', [AgreementController::class, 'export']);
 });
+Route::get('/agreement/export', [AgreementController::class, 'export']);
 
 /** Routes component */
 Route::get('/component', [ComponentController::class, 'index']);
@@ -79,8 +79,8 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::post('/department', [DepartmentController::class, 'store']);
     Route::delete('/department/deletebyid/{id}', [DepartmentController::class, 'deleteById']);
     Route::put('/department', [DepartmentController::class, 'put']);
-    Route::get('/department/export', [DepartmentController::class, 'export']);
 });
+Route::get('/department/export', [DepartmentController::class, 'export']);
 
 /** Routes departmentagreement */
 Route::get('/departmentagreement', [DepartmentAgreementController::class, 'index']);
@@ -152,8 +152,8 @@ Route::middleware(['auth:sanctum', 'role:chefdept'])->group(function () {
     Route::put('/account/validatechoixcours/{login}', [AccountController::class, 'validateChoixCours']);
     Route::put('/account/modif', [AccountController::class, 'modif']);
     Route::delete('/account/deletebyid/{login}', [AccountController::class, 'deleteById']);
-    Route::get('/account/export', [AccountController::class, 'export']);
 });
+Route::get('/account/export', [AccountController::class, 'export']);
 
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::put('/account/changedept/{login}/{dept_id}', [AccountController::class, 'changeDept']);
