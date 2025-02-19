@@ -22,21 +22,15 @@ class AccountExport implements FromCollection, WithHeadings, WithMapping
      */
     public function collection()
     {
-        // Vérifier si la requête contient un token valide
-        $token = request()->query('token');
-        if (!$token || !auth('sanctum')->user()) {
-            throw new \Exception("Token invalide ou manquant");
-        }
-    
         $ids = $this->accounts;
-    
+
         if (!is_array($ids)) {
             throw new \Exception("Expected an array of IDs, received something else.");
         }
-    
+
         return Account::whereDoesntHave('access')
             ->whereIn('acc_id', $ids)
-            ->with(['department', 'wishes', 'arbitrage.agreement'])
+            ->with(['department', 'wishes', 'arbitrage.agreement']) // Ajout de arbitrage.agreement
             ->get();
     }
 
