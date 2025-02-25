@@ -201,6 +201,8 @@ Route::get('/admin', [AdministrationController::class, 'index']);
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::put('/admin/date', [AdministrationController::class, 'changeDateLimite']);
     Route::put('/admin/arbitrage', [AdministrationController::class, 'changeArbitrageStatus']);
+    Route::post('/admin/database', [AdministrationController::class, 'backup']);
+    Route::get('/admin/download', [AdministrationController::class, 'downloadLatest']);
 });
 
 /** Routes acceptedaccount */
