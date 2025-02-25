@@ -112,7 +112,7 @@ class AdministrationController extends Controller
     // Méthode optionnelle pour télécharger la dernière sauvegarde
     public function downloadLatest()
     {
-        $path = '/var/www/html/ilc/BACK/ilc_backup_latest.sql';
+        $path = '/var/www/html/ilc/BACK/bdd_backup/ilc_backup_latest.sql';
         
         if (file_exists($path)) {
             return response()->download($path);
