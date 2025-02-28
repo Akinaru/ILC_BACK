@@ -61,6 +61,7 @@ class AccountResource extends JsonResource
             'access' => $this->resource->access,
             'role' => $roleInfo,
             'documents' => $docCount,
+            'destination' => new AgreementResource($this->resource->destination),
             'arbitrage' => $this->resource->arbitrage 
                 ? [
                     ...(new AgreementResource($this->resource->arbitrage->agreement))->toArray($request),

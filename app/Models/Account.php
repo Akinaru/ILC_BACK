@@ -36,6 +36,7 @@ class Account extends Authenticatable
         'acc_ancienetuconsent',
         'acc_anneemobilite',
         'acc_temoignage',
+        'agree_id'
     ];
 
     public function department()
@@ -51,6 +52,11 @@ class Account extends Authenticatable
     public function arbitrage()
     {
         return $this->hasOne(Arbitrage::class, 'acc_id', 'acc_id');
+    } 
+
+    public function destination()
+    {
+        return $this->hasOne(Agreement::class, 'agree_id', 'agree_id');
     } 
 
     public function hasRole($role)
