@@ -12,10 +12,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 require 'vendor/autoload.php';
 require_once "vendor/apereo/phpcas/CAS.php";
 
-// Configuration de base de CAS
-
 phpCAS::setVerbose(true);
-phpCAS::client(CAS_VERSION_2_0, "cas-uds.grenet.fr", 443, '', $baseUrl);
+phpCAS::client(CAS_VERSION_2_0, "cas-uds.grenet.fr", 443, '', "https://ilc.iut-acy.univ-smb.fr/");
+//phpCAS::client(CAS_VERSION_2_0, $cas_host, $cas_port, $cas_context, $client_service_name);
 phpCAS::setNoCasServerValidation();
 
 // Vérification de l'état de connexion
@@ -29,29 +28,37 @@ if (isset($_REQUEST['check_login'])) {
 
 if (isset($_REQUEST['logout'])) {
     phpCAS::logout();
-    
-    // Vérifier si l'URL contient "preprod"
-    $isPreprod = strpos($_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'], 'preprod') !== false;
-    $homeRedirect = $isPreprod ? 'https://ilc.iut-acy.univ-smb.fr/preprod/#/' : 'https://ilc.iut-acy.univ-smb.fr/#/';
-    
-    echo "<script>
-            window.location.href = '" . $homeRedirect . "';
-          </script>";
+    if(isset($_REQUEST['preprod'])){
+        echo "<script>
+        window.location.href = 'https://ilc.iut-acy.univ-smb.fr/preprod#/';
+        </script>";
+    }
+    else{
+        echo "<script>
+        window.location.href = 'https://ilc.iut-acy.univ-smb.fr/#/';
+        </script>";
+    }
     exit();
 } else {
     phpCAS::forceAuthentication();
     $user = phpCAS::getUser();
-    
-    // Vérifier si l'URL contient "preprod"
-    $isPreprod = strpos($_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'], 'preprod') !== false;
-    $loginRedirect = $isPreprod ? 'https://ilc.iut-acy.univ-smb.fr/preprod/#/login' : 'https://ilc.iut-acy.univ-smb.fr/#/login';
-    
+
     // Redirection vers la page de login avec stockage dans localStorage
-    echo "<script>
-            localStorage.setItem('login', '" . addslashes($user) . "');
-            localStorage.setItem('auth', 'success');
-            window.location.href = '" . $loginRedirect . "';
-          </script>";
+    if(isset($_REQUEST['preprod'])){
+        echo "<script>
+        localStorage.setItem('login', '" . addslashes($user) . "');
+        localStorage.setItem('auth', 'success');
+        window.location.href = 'https://ilc.iut-acy.univ-smb.fr/preprod#/login';
+      </script>";
+    }
+    else{
+        echo "<script>
+        localStorage.setItem('login', '" . addslashes($user) . "');
+        localStorage.setItem('auth', 'success');
+        window.location.href = 'https://ilc.iut-acy.univ-smb.fr/#/login';
+      </script>"; 
+    }
+
     exit();
 }
 ?>
