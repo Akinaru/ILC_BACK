@@ -12,9 +12,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 require 'vendor/autoload.php';
 require_once "vendor/apereo/phpcas/CAS.php";
 
+// Détecter si nous sommes dans l'environnement de preprod
+$is_preprod = strpos($_SERVER['REQUEST_URI'], '/preprod/') !== false;
+$base_url = $is_preprod ? 'https://ilc.iut-acy.univ-smb.fr/preprod/' : 'https://ilc.iut-acy.univ-smb.fr/';
+$redirect_base = $is_preprod ? 'https://ilc.iut-acy.univ-smb.fr/preprod/#/' : 'https://ilc.iut-acy.univ-smb.fr/#/';
+
 phpCAS::setVerbose(true);
-phpCAS::client(CAS_VERSION_2_0, "cas-uds.grenet.fr", 443, '', "https://ilc.iut-acy.univ-smb.fr/");
-//phpCAS::client(CAS_VERSION_2_0, $cas_host, $cas_port, $cas_context, $client_service_name);
+phpCAS::client(CAS_VERSION_2_0, "cas-uds.grenet.fr", 443, '', $base_url);
 phpCAS::setNoCasServerValidation();
 
 // Vérification de l'état de connexion
@@ -29,7 +33,7 @@ if (isset($_REQUEST['check_login'])) {
 if (isset($_REQUEST['logout'])) {
     phpCAS::logout();
     echo "<script>
-            window.location.href = 'https://ilc.iut-acy.univ-smb.fr/#/';
+            window.location.href = '" . $redirect_base . "';
           </script>";
     exit();
 } else {
@@ -40,7 +44,7 @@ if (isset($_REQUEST['logout'])) {
     echo "<script>
             localStorage.setItem('login', '" . addslashes($user) . "');
             localStorage.setItem('auth', 'success');
-            window.location.href = 'https://ilc.iut-acy.univ-smb.fr/#/login';
+            window.location.href = '" . $redirect_base . "login';
           </script>";
     exit();
 }
