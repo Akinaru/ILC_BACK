@@ -57,6 +57,7 @@ class AccountResource extends JsonResource
             'acc_mail' => $this->resource->acc_mail,
             'acc_parcours' => $this->resource->acc_parcours,
             'acc_validateacc' => (bool) $this->resource->acc_validateacc,
+            'acc_arbitragefait' => (bool) $this->resource->acc_arbitragefait,
             'department' => $this->resource->department,
             'access' => $this->resource->access,
             'role' => $roleInfo,
