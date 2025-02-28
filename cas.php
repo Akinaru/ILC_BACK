@@ -12,18 +12,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 require 'vendor/autoload.php';
 require_once "vendor/apereo/phpcas/CAS.php";
 
-// Détecter si nous sommes dans l'environnement de preprod
-$is_preprod = strpos($_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'], 'preprod') !== false;
-$base_url = $is_preprod ? 'https://ilc.iut-acy.univ-smb.fr/preprod/' : 'https://ilc.iut-acy.univ-smb.fr/';
-$redirect_base = $is_preprod ? 'https://ilc.iut-acy.univ-smb.fr/preprod/#/' : 'https://ilc.iut-acy.univ-smb.fr/#/';
-
-// Pour débogage
-error_log("DEBUG - URL complète: " . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
-error_log("DEBUG - is_preprod: " . ($is_preprod ? "OUI" : "NON"));
-error_log("DEBUG - redirect_base: " . $redirect_base);
+// Détecter si l'URL contient "preprod"
+$isPreprod = strpos($_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'], 'preprod') !== false;
+$baseUrl = $isPreprod ? 'https://ilc.iut-acy.univ-smb.fr/preprod/' : 'https://ilc.iut-acy.univ-smb.fr/';
+$redirectUrl = $isPreprod ? 'https://ilc.iut-acy.univ-smb.fr/preprod/#/login' : 'https://ilc.iut-acy.univ-smb.fr/#/login';
+$homeUrl = $isPreprod ? 'https://ilc.iut-acy.univ-smb.fr/preprod/#/' : 'https://ilc.iut-acy.univ-smb.fr/#/';
 
 phpCAS::setVerbose(true);
-phpCAS::client(CAS_VERSION_2_0, "cas-uds.grenet.fr", 443, '', $base_url);
+phpCAS::client(CAS_VERSION_2_0, "cas-uds.grenet.fr", 443, '', $baseUrl);
 phpCAS::setNoCasServerValidation();
 
 // Vérification de l'état de connexion
@@ -38,8 +34,7 @@ if (isset($_REQUEST['check_login'])) {
 if (isset($_REQUEST['logout'])) {
     phpCAS::logout();
     echo "<script>
-            console.log('Redirection vers: " . $redirect_base . "');
-            window.location.href = '" . $redirect_base . "';
+            window.location.href = '" . $homeUrl . "';
           </script>";
     exit();
 } else {
@@ -50,8 +45,7 @@ if (isset($_REQUEST['logout'])) {
     echo "<script>
             localStorage.setItem('login', '" . addslashes($user) . "');
             localStorage.setItem('auth', 'success');
-            console.log('Redirection vers: " . $redirect_base . "login');
-            window.location.href = '" . $redirect_base . "login';
+            window.location.href = '" . $redirectUrl . "';
           </script>";
     exit();
 }
