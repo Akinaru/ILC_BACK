@@ -12,11 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 require 'vendor/autoload.php';
 require_once "vendor/apereo/phpcas/CAS.php";
 
-// Détecter si l'URL contient "preprod"
-$isPreprod = strpos($_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'], 'preprod') !== false;
-$baseUrl = $isPreprod ? 'https://ilc.iut-acy.univ-smb.fr/preprod/' : 'https://ilc.iut-acy.univ-smb.fr/';
-$redirectUrl = $isPreprod ? 'https://ilc.iut-acy.univ-smb.fr/preprod/#/login' : 'https://ilc.iut-acy.univ-smb.fr/#/login';
-$homeUrl = $isPreprod ? 'https://ilc.iut-acy.univ-smb.fr/preprod/#/' : 'https://ilc.iut-acy.univ-smb.fr/#/';
+// Configuration de base de CAS
 
 phpCAS::setVerbose(true);
 phpCAS::client(CAS_VERSION_2_0, "cas-uds.grenet.fr", 443, '', $baseUrl);
@@ -33,19 +29,28 @@ if (isset($_REQUEST['check_login'])) {
 
 if (isset($_REQUEST['logout'])) {
     phpCAS::logout();
+    
+    // Vérifier si l'URL contient "preprod"
+    $isPreprod = strpos($_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'], 'preprod') !== false;
+    $homeRedirect = $isPreprod ? 'https://ilc.iut-acy.univ-smb.fr/preprod/#/' : 'https://ilc.iut-acy.univ-smb.fr/#/';
+    
     echo "<script>
-            window.location.href = '" . $homeUrl . "';
+            window.location.href = '" . $homeRedirect . "';
           </script>";
     exit();
 } else {
     phpCAS::forceAuthentication();
     $user = phpCAS::getUser();
-
+    
+    // Vérifier si l'URL contient "preprod"
+    $isPreprod = strpos($_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'], 'preprod') !== false;
+    $loginRedirect = $isPreprod ? 'https://ilc.iut-acy.univ-smb.fr/preprod/#/login' : 'https://ilc.iut-acy.univ-smb.fr/#/login';
+    
     // Redirection vers la page de login avec stockage dans localStorage
     echo "<script>
             localStorage.setItem('login', '" . addslashes($user) . "');
             localStorage.setItem('auth', 'success');
-            window.location.href = '" . $redirectUrl . "';
+            window.location.href = '" . $loginRedirect . "';
           </script>";
     exit();
 }
