@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Resources\ArbitrageResource;
 use App\Models\Arbitrage;
+use App\Models\Account;
 
 class ArbitrageController extends Controller
 {
