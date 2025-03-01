@@ -219,6 +219,7 @@ Route::get('/arbitrage/getbyid/{acc_id}', [ArbitrageController::class, 'showByAc
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::get('/arbitrage', [ArbitrageController::class, 'index']);
     Route::post('/arbitrage', [ArbitrageController::class, 'saveArbitrage']);
+    Route::post('/arbitrage/archiver', [ArbitrageController::class, 'archiverArbitrage']);
     Route::put('/arbitrage', [ArbitrageController::class, 'modifArbitrage']);
 });
 
