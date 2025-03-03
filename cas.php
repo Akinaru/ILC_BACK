@@ -28,36 +28,20 @@ if (isset($_REQUEST['check_login'])) {
 
 if (isset($_REQUEST['logout'])) {
     phpCAS::logout();
-    if(isset($_REQUEST['preprod'])){
-        echo "<script>
-        window.location.href = 'https://ilc.iut-acy.univ-smb.fr/preprod#/';
-        </script>";
-    }
-    else{
         echo "<script>
         window.location.href = 'https://ilc.iut-acy.univ-smb.fr/#/';
         </script>";
-    }
     exit();
 } else {
     phpCAS::forceAuthentication();
     $user = phpCAS::getUser();
 
     // Redirection vers la page de login avec stockage dans localStorage
-    if(isset($_REQUEST['preprod'])){
-        echo "<script>
-        localStorage.setItem('login', '" . addslashes($user) . "');
-        localStorage.setItem('auth', 'success');
-        window.location.href = 'https://ilc.iut-acy.univ-smb.fr/preprod#/login';
-      </script>";
-    }
-    else{
         echo "<script>
         localStorage.setItem('login', '" . addslashes($user) . "');
         localStorage.setItem('auth', 'success');
         window.location.href = 'https://ilc.iut-acy.univ-smb.fr/#/login';
       </script>"; 
-    }
 
     exit();
 }
