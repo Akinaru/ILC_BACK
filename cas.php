@@ -63,16 +63,27 @@ if (isset($_REQUEST['logout'])) {
 
     // Redirection vers la page de login avec stockage dans localStorage
     echo "<script>
+    // Test if localStorage is available and working
     try {
-      console.log('Setting localStorage items...');
-      localStorage.setItem('login', '" . addslashes($user) . "');
-      localStorage.setItem('auth', 'success');
-      console.log('LocalStorage set successfully');
-      console.log('Redirecting to: " . $loginUrl . "');
-      window.location.href = '" . $loginUrl . "';
-    } catch(e) {
-      console.error('Error setting localStorage:', e);
+      localStorage.setItem('test', 'test');
+      if (localStorage.getItem('test') === 'test') {
+        console.log('localStorage is working properly');
+        localStorage.removeItem('test');
+        
+        // Now try to set the actual values
+        localStorage.setItem('login', '" . addslashes($user) . "');
+        localStorage.setItem('auth', 'success');
+        console.log('login value set:', localStorage.getItem('login'));
+        console.log('auth value set:', localStorage.getItem('auth'));
+      } else {
+        console.error('localStorage test failed - can set but not retrieve');
+      }
+    } catch (e) {
+      console.error('localStorage error:', e);
     }
+    
+    // Continue with redirection
+    window.location.href = '" . $loginUrl . "';
   </script>";
 
     exit();
