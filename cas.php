@@ -17,17 +17,6 @@ phpCAS::client(CAS_VERSION_2_0, "cas-uds.grenet.fr", 443, '', "https://ilc.iut-a
 //phpCAS::client(CAS_VERSION_2_0, $cas_host, $cas_port, $cas_context, $client_service_name);
 phpCAS::setNoCasServerValidation();
 
-function getRedirectUrl() {
-    // Récupérer le paramètre redirect s'il existe
-    if (isset($_REQUEST['redirect']) && !empty($_REQUEST['redirect'])) {
-        return urldecode($_REQUEST['redirect']);
-    }
-    
-    // URL par défaut si pas de paramètre redirect
-    return 'https://ilc.iut-acy.univ-smb.fr/#/';
-}
-
-
 // Vérification de l'état de connexion
 if (isset($_REQUEST['check_login'])) {
     $isLoggedIn = phpCAS::isAuthenticated();
@@ -39,22 +28,36 @@ if (isset($_REQUEST['check_login'])) {
 
 if (isset($_REQUEST['logout'])) {
     phpCAS::logout();
-    $redirectUrl = getRedirectUrl();
+    if(isset($_REQUEST['preprod'])){
         echo "<script>
-        window.location.href = '" . $redirectUrl . "';
+        window.location.href = 'https://ilc.iut-acy.univ-smb.fr/preprod#/';
         </script>";
+    }
+    else{
+        echo "<script>
+        window.location.href = 'https://ilc.iut-acy.univ-smb.fr/#/';
+        </script>";
+    }
     exit();
 } else {
     phpCAS::forceAuthentication();
     $user = phpCAS::getUser();
-    $redirectUrl = getRedirectUrl();
 
     // Redirection vers la page de login avec stockage dans localStorage
+    if(isset($_REQUEST['preprod'])){
         echo "<script>
         localStorage.setItem('login', '" . addslashes($user) . "');
         localStorage.setItem('auth', 'success');
-        window.location.href = '" . $redirectUrl . "';
+        window.location.href = 'https://ilc.iut-acy.univ-smb.fr/preprod#/login';
+      </script>";
+    }
+    else{
+        echo "<script>
+        localStorage.setItem('login', '" . addslashes($user) . "');
+        localStorage.setItem('auth', 'success');
+        window.location.href = 'https://ilc.iut-acy.univ-smb.fr/#/login';
       </script>"; 
+    }
 
     exit();
 }
