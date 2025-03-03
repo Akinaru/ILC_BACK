@@ -62,24 +62,9 @@ if (isset($_REQUEST['logout'])) {
     $loginUrl = $baseUrl . "login";
 
     // Redirection vers la page de login avec stockage dans localStorage
-    echo "<script>
-    // Try both localStorage and sessionStorage
-    try {
-      localStorage.setItem('login', '" . addslashes($user) . "');
-      localStorage.setItem('auth', 'success');
-    } catch (e) {
-      console.error('localStorage error:', e);
-    }
-    
-    try {
-      sessionStorage.setItem('login', '" . addslashes($user) . "');
-      sessionStorage.setItem('auth', 'success');
-    } catch (e) {
-      console.error('sessionStorage error:', e);
-    }
-    
-    window.location.href = '" . $loginUrl . "';
-  </script>";
+    $encodedUser = urlencode($user);
+    $redirectUrl = $loginUrl . "?user=" . $encodedUser . "&auth=success";
+    echo "<script>window.location.href = '" . $redirectUrl . "';</script>";
 
     exit();
 }
