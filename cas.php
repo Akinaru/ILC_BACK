@@ -17,7 +17,6 @@ phpCAS::client(CAS_VERSION_2_0, "cas-uds.grenet.fr", 443, '', "https://ilc.iut-a
 //phpCAS::client(CAS_VERSION_2_0, $cas_host, $cas_port, $cas_context, $client_service_name);
 phpCAS::setNoCasServerValidation();
 
-// Fonction simplifiée pour récupérer l'URL de redirection
 function getRedirectUrl() {
     // Récupérer le paramètre redirect s'il existe
     if (isset($_REQUEST['redirect']) && !empty($_REQUEST['redirect'])) {
@@ -27,6 +26,7 @@ function getRedirectUrl() {
     // URL par défaut si pas de paramètre redirect
     return 'https://ilc.iut-acy.univ-smb.fr/#/';
 }
+
 
 // Vérification de l'état de connexion
 if (isset($_REQUEST['check_login'])) {
@@ -40,10 +40,9 @@ if (isset($_REQUEST['check_login'])) {
 if (isset($_REQUEST['logout'])) {
     phpCAS::logout();
     $redirectUrl = getRedirectUrl();
-    
-    echo "<script>
-    window.location.href = '" . $redirectUrl . "';
-    </script>";
+        echo "<script>
+        window.location.href = '" . $redirectUrl . "';
+        </script>";
     exit();
 } else {
     phpCAS::forceAuthentication();
@@ -51,11 +50,11 @@ if (isset($_REQUEST['logout'])) {
     $redirectUrl = getRedirectUrl();
 
     // Redirection vers la page de login avec stockage dans localStorage
-    echo "<script>
-    localStorage.setItem('login', '" . addslashes($user) . "');
-    localStorage.setItem('auth', 'success');
-    window.location.href = '" . $redirectUrl . "';
-    </script>";
+        echo "<script>
+        localStorage.setItem('login', '" . addslashes($user) . "');
+        localStorage.setItem('auth', 'success');
+        window.location.href = '" . $redirectUrl . "';
+      </script>"; 
 
     exit();
 }
