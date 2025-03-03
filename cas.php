@@ -22,7 +22,7 @@ function getBaseUrl() {
     if (isset($_REQUEST['redirect']) && !empty($_REQUEST['redirect'])) {
         $redirectUrl = urldecode($_REQUEST['redirect']);
         
-        // Extraire le domaine de base et le chemin
+        // Extraire les composants de l'URL
         $parsedUrl = parse_url($redirectUrl);
         $baseUrl = '';
         
@@ -35,9 +35,9 @@ function getBaseUrl() {
                 $baseUrl .= ':' . $parsedUrl['port'];
             }
             
-            // Vérifier si l'URL contient "preprod" après le hash
-            if (isset($parsedUrl['fragment']) && strpos($parsedUrl['fragment'], 'preprod') === 0) {
-                $baseUrl .= '/#/preprod/';
+            // Vérifier si le chemin contient "/preprod/"
+            if (isset($parsedUrl['path']) && strpos($parsedUrl['path'], '/preprod') !== false) {
+                $baseUrl .= '/preprod/#/';
             } else {
                 $baseUrl .= '/#/';
             }
