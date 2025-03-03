@@ -57,7 +57,7 @@ if (isset($_REQUEST['check_login'])) {
 
 if (isset($_REQUEST['logout'])) {
     phpCAS::logout();
-    $baseUrl = getRedirectUrl();
+    $baseUrl = getBaseUrl();
         echo "<script>
         window.location.href = '" . $baseUrl . "';
         </script>";
@@ -65,7 +65,7 @@ if (isset($_REQUEST['logout'])) {
 } else {
     phpCAS::forceAuthentication();
     $user = phpCAS::getUser();
-    $baseUrl = getRedirectUrl();
+    $baseUrl = getBaseUrl();
     $loginUrl = $baseUrl . "login";
 
     // Redirection vers la page de login avec stockage dans localStorage
