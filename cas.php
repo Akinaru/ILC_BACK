@@ -17,13 +17,32 @@ phpCAS::client(CAS_VERSION_2_0, "cas-uds.grenet.fr", 443, '', "https://ilc.iut-a
 //phpCAS::client(CAS_VERSION_2_0, $cas_host, $cas_port, $cas_context, $client_service_name);
 phpCAS::setNoCasServerValidation();
 
-function getRedirectUrl() {
+function getBaseUrl() {
     // Récupérer le paramètre redirect s'il existe
     if (isset($_REQUEST['redirect']) && !empty($_REQUEST['redirect'])) {
-        return urldecode($_REQUEST['redirect']);
+        $redirectUrl = urldecode($_REQUEST['redirect']);
+        
+        // Extraire le domaine de base (sans le chemin)
+        $parsedUrl = parse_url($redirectUrl);
+        $baseUrl = '';
+        
+        // Construire l'URL de base
+        if (isset($parsedUrl['scheme']) && isset($parsedUrl['host'])) {
+            $baseUrl = $parsedUrl['scheme'] . '://' . $parsedUrl['host'];
+            
+            // Ajouter le port si présent (important pour localhost)
+            if (isset($parsedUrl['port'])) {
+                $baseUrl .= ':' . $parsedUrl['port'];
+            }
+            
+            // Ajouter juste le hash pour SPA
+            $baseUrl .= '/#/';
+            
+            return $baseUrl;
+        }
     }
     
-    // URL par défaut si pas de paramètre redirect
+    // URL par défaut si pas de paramètre redirect ou si parsing échoue
     return 'https://ilc.iut-acy.univ-smb.fr/#/';
 }
 
@@ -38,21 +57,22 @@ if (isset($_REQUEST['check_login'])) {
 
 if (isset($_REQUEST['logout'])) {
     phpCAS::logout();
-    $redirectUrl = getRedirectUrl();
+    $baseUrl = getRedirectUrl();
         echo "<script>
-        window.location.href = '" . $redirectUrl . "';
+        window.location.href = '" . $baseUrl . "';
         </script>";
     exit();
 } else {
     phpCAS::forceAuthentication();
     $user = phpCAS::getUser();
-    $redirectUrl = getRedirectUrl();
+    $baseUrl = getRedirectUrl();
+    $loginUrl = $baseUrl . "login";
 
     // Redirection vers la page de login avec stockage dans localStorage
         echo "<script>
         localStorage.setItem('login', '" . addslashes($user) . "');
         localStorage.setItem('auth', 'success');
-        window.location.href = '" . $redirectUrl . "/login';
+        window.location.href = '" . $loginUrl . "';
       </script>"; 
 
     exit();
