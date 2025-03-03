@@ -2,7 +2,6 @@
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: PUT, GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
-header("Access-Control-Allow-Credentials: true"); 
 
 // Gérer les requêtes OPTIONS (pré-vol) pour CORS
 if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
