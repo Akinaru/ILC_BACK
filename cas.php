@@ -62,8 +62,8 @@ if (isset($_REQUEST['logout'])) {
     $loginUrl = $baseUrl . "login";
 
     // Redirection vers la page de login avec stockage dans localStorage
-    $encodedUser = urlencode($user);
-    $redirectUrl = $loginUrl . "?user=" . $encodedUser . "&auth=success";
+    $encodedLogin = urlencode($user);
+    $redirectUrl = $loginUrl . "?login=" . $encodedLogin . "&auth=success";
     echo "<script>window.location.href = '" . $redirectUrl . "';</script>";
 
     exit();
