@@ -68,7 +68,6 @@ if (isset($_REQUEST['logout'])) {
       localStorage.setItem('test', 'test');
       if (localStorage.getItem('test') === 'test') {
         console.log('localStorage is working properly');
-        localStorage.removeItem('test');
         
         // Now try to set the actual values
         localStorage.setItem('login', '" . addslashes($user) . "');
