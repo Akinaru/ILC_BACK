@@ -62,11 +62,18 @@ if (isset($_REQUEST['logout'])) {
     $loginUrl = $baseUrl . "login";
 
     // Redirection vers la page de login avec stockage dans localStorage
-        echo "<script>
-        localStorage.setItem('login', '" . addslashes($user) . "');
-        localStorage.setItem('auth', 'success');
-        window.location.href = '" . $loginUrl . "';
-      </script>"; 
+    echo "<script>
+    try {
+      console.log('Setting localStorage items...');
+      localStorage.setItem('login', '" . addslashes($user) . "');
+      localStorage.setItem('auth', 'success');
+      console.log('LocalStorage set successfully');
+      console.log('Redirecting to: " . $loginUrl . "');
+      window.location.href = '" . $loginUrl . "';
+    } catch(e) {
+      console.error('Error setting localStorage:', e);
+    }
+  </script>";
 
     exit();
 }
