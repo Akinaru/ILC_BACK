@@ -22,32 +22,21 @@ function getBaseUrl() {
     if (isset($_REQUEST['redirect']) && !empty($_REQUEST['redirect'])) {
         $redirectUrl = urldecode($_REQUEST['redirect']);
         
-        // Extraire les composants de l'URL
-        $parsedUrl = parse_url($redirectUrl);
-        $baseUrl = '';
+        // Extraire tout ce qui est avant le contenu du fragment (après #)
+        $hashPosition = strpos($redirectUrl, '#');
         
-        // Construire l'URL de base
-        if (isset($parsedUrl['scheme']) && isset($parsedUrl['host'])) {
-            $baseUrl = $parsedUrl['scheme'] . '://' . $parsedUrl['host'];
-            
-            // Ajouter le port si présent (important pour localhost)
-            if (isset($parsedUrl['port'])) {
-                $baseUrl .= ':' . $parsedUrl['port'];
-            }
-            
-            // Vérifier si le chemin contient "/preprod/"
-            if (isset($parsedUrl['path']) && strpos($parsedUrl['path'], '/preprod') !== false) {
-                $baseUrl .= '/preprod/#/';
-            } else {
-                $baseUrl .= '/#/';
-            }
-            
+        if ($hashPosition !== false) {
+            // +1 pour inclure le # lui-même
+            $baseUrl = substr($redirectUrl, 0, $hashPosition + 1);
             return $baseUrl;
         }
+        
+        // Si pas de #, retourner l'URL complète avec # ajouté
+        return $redirectUrl . '#';
     }
     
-    // URL par défaut si pas de paramètre redirect ou si parsing échoue
-    return 'https://ilc.iut-acy.univ-smb.fr/#/';
+    // URL par défaut si pas de paramètre redirect
+    return 'https://ilc.iut-acy.univ-smb.fr/#';
 }
 
 // Vérification de l'état de connexion
