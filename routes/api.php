@@ -120,11 +120,12 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
 
 /** Routes access */
 Route::get('/access/getrole/{login}', [AccessController::class, 'getRole']);
+Route::get('/access/getbylogin/{login}', [AccessController::class, 'getByLogin']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/access', [AccessController::class, 'index']);
     Route::get('/access/filtered', [AccessController::class, 'getFiltered']);
-    Route::get('/access/getbylogin/{login}', [AccessController::class, 'getByLogin']);
 });
+
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::post('/access', [AccessController::class, 'store']);
     Route::delete('/access/delete', [AccessController::class, 'delete']);
@@ -140,7 +141,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/account/temoignage', [AccountController::class, 'temoignage']);
     Route::put('/account/modifetu', [AccountController::class, 'modifEtu']);
     Route::delete('/account/selfdelete', [AccountController::class, 'selfDelete']);
-    
+    Route::delete('/account/{acc_id}', [AccountController::class, 'deleteNoAccepted']);
 });
 
 Route::get('/account/getbylogin/{login}', [AccountController::class, 'getByLogin']);
@@ -211,8 +212,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/acceptedaccount', [AcceptedAccountController::class, 'store']);
     Route::post('/acceptedaccount/import', [AcceptedAccountController::class, 'storeImport']);
     Route::delete('/acceptedaccount', [AcceptedAccountController::class, 'delete']);
-    Route::get('/acceptedaccount/getbylogin/{login}', [AcceptedAccountController::class, 'getAcceptedByLogin']);
 });
+Route::get('/acceptedaccount/getbylogin/{login}', [AcceptedAccountController::class, 'getAcceptedByLogin']);
 
 /** Routes arbitrage */
 Route::get('/arbitrage/getbyid/{acc_id}', [ArbitrageController::class, 'showByAccId']);
