@@ -46,7 +46,7 @@ class AccountResource extends JsonResource
         $accessResponse = null;
         if ($this->resource->access) {
             $accessResponse = [
-                'access' => new AccessResource($this->resource->access),
+                'access' => $this->resource->access,
                 'count' => 1,
             ];
         } else {
