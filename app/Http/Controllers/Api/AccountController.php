@@ -94,9 +94,10 @@ class AccountController extends Controller
             return response()->json([
                 'status'=> 201,
                 'message' => 'Compte créé avec succès',
-                'account' => $account,
+                'account' => new AccountResource($account),
                 'token' => $token,
-                'access' => $access ? $access->acs_accounttype : 0
+                'access' => $access ? $access->acs_accounttype : 0,
+                
             ]);
         } catch (\Exception $e) {
             return response()->json([
