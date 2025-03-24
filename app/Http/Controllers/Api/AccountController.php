@@ -29,21 +29,15 @@ class AccountController extends Controller
 
     public function students()
     {
-        // Récupérer d'abord tous les comptes qui ont une relation 'access'
-        $accountsWithAccess = Account::has('access')
+        $accountsWithoutAccess = Account::doesntHave('access')
             ->orderBy('acc_fullname')
             ->get();
-        
-        // Filtrer dans la mémoire (après récupération) pour ne garder que ceux avec access->count égal à 0
-        $accountsWithZeroAccess = $accountsWithAccess->filter(function ($account) {
-            return $account->access->count === 0;
-        });
-        
-        $accountCollection = AccountResource::collection($accountsWithZeroAccess)->all();
-        
+    
+        $accountCollection = AccountResource::collection($accountsWithoutAccess)->all();
+    
         return response()->json([
             'accounts' => $accountCollection,
-            'count' => $accountsWithZeroAccess->count(),
+            'count' => $accountsWithoutAccess->count(),
         ]);
     }
 
