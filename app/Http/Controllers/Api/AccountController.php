@@ -8,6 +8,7 @@ use App\Http\Resources\AccountResource;
 use App\Models\Account;
 use App\Models\Access;
 use App\Models\WishAgreement;
+use App\Models\Favoris;
 use App\Models\AcceptedAccount;
 use App\Models\Arbitrage;
 use Illuminate\Support\Facades\DB;
