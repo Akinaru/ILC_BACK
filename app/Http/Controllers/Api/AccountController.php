@@ -228,82 +228,79 @@ class AccountController extends Controller
     
     public function deleteById($id)
     {
-
-
         $account = Account::find($id);
     
         if (!$account) {
-            return response()->json(['status' => 404, 'message' => 'Compte non trouvée.']);
+            return response()->json(['status' => 404, 'message' => 'Compte non trouvé.']);
         }
-        $access = Access::where('acc_id', $id)->first();
-        if ($access) {
-            $access->delete();
-        }
-        $acceptedaccount = AcceptedAccount::where('acc_id', $id)->first();
-        if ($acceptedaccount) {
-            $acceptedaccount->delete();
-        }
-        $voeux = WishAgreement::where('acc_id', $id)->first();
-        if ($voeux) {
-            $voeux->delete();
-        }
-        $arbitrage = Arbitrage::where('acc_id', $id)->first();
-        if ($arbitrage) {
-            $arbitrage->delete();
-        }
-    
+        
+        // Suppression des accès
+        Access::where('acc_id', $id)->delete();
+        
+        // Suppression des comptes acceptés
+        AcceptedAccount::where('acc_id', $id)->delete();
+        
+        // Suppression de TOUS les vœux associés au compte (pas seulement le premier)
+        WishAgreement::where('acc_id', $id)->delete();
+        
+        // Suppression de TOUS les arbitrages associés au compte (pas seulement le premier)
+        Arbitrage::where('acc_id', $id)->delete();
+        
+        // Suppression des favoris associés au compte
+        Favoris::where('acc_id', $id)->delete();
+        
+        // Suppression du compte
         $account->delete();
-
+    
         // Appel des méthodes deletePerso dans le DocumentController
         $documentController = new DocumentsController();
         $documentController->deletePerso('choix_cours', 'choix_cours_'.$id);
         $documentController->deletePerso('contrat_peda', 'contrat_peda_'.$id);
         $documentController->deletePerso('releve_note', 'releve_note_'.$id);
     
-        return response()->json(['status' => 202, 'message' => 'Le compte a été supprimée avec succès.']);
+        return response()->json(['status' => 202, 'message' => 'Le compte a été supprimé avec succès.']);
     }
-
+    
     public function selfDelete(Request $request)
     {
-
         $validatedData = $request->validate([
             'acc_id' => 'required|string',
         ]);
         
         $request->user()->currentAccessToken()->delete();
         $id = $validatedData['acc_id'];
-
+    
         $account = Account::find($id);
     
         if (!$account) {
-            return response()->json(['status' => 404, 'message' => 'Compte non trouvée.']);
+            return response()->json(['status' => 404, 'message' => 'Compte non trouvé.']);
         }
-        $access = Access::where('acc_id', $id)->first();
-        if ($access) {
-            $access->delete();
-        }
-        $acceptedaccount = AcceptedAccount::where('acc_id', $id)->first();
-        if ($acceptedaccount) {
-            $acceptedaccount->delete();
-        }
-        $voeux = WishAgreement::where('acc_id', $id)->first();
-        if ($voeux) {
-            $voeux->delete();
-        }
-        $arbitrage = Arbitrage::where('acc_id', $id)->first();
-        if ($arbitrage) {
-            $arbitrage->delete();
-        }
-    
+        
+        // Suppression des accès
+        Access::where('acc_id', $id)->delete();
+        
+        // Suppression des comptes acceptés
+        AcceptedAccount::where('acc_id', $id)->delete();
+        
+        // Suppression de TOUS les vœux associés au compte (pas seulement le premier)
+        WishAgreement::where('acc_id', $id)->delete();
+        
+        // Suppression de TOUS les arbitrages associés au compte (pas seulement le premier)
+        Arbitrage::where('acc_id', $id)->delete();
+        
+        // Suppression des favoris associés au compte
+        Favoris::where('acc_id', $id)->delete();
+        
+        // Suppression du compte
         $account->delete();
-
+    
         // Appel des méthodes deletePerso dans le DocumentController
         $documentController = new DocumentsController();
         $documentController->deletePerso('choix_cours', 'choix_cours_'.$id);
         $documentController->deletePerso('contrat_peda', 'contrat_peda_'.$id);
         $documentController->deletePerso('releve_note', 'releve_note_'.$id);
     
-        return response()->json(['status' => 202, 'message' => 'Le compte a été supprimée avec succès.']);
+        return response()->json(['status' => 202, 'message' => 'Le compte a été supprimé avec succès.']);
     }
        
     public function login($id)
