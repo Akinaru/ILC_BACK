@@ -435,69 +435,69 @@ public function getById($id)
         
     public function deleteById($id)
     {
-        
         $agreement = Agreement::find($id);
         
         if (!$agreement) {
             return response()->json(['message' => 'Accord non trouvée.'], 404);
         }
-        $departmentAgreements = DepartmentAgreement::where('agree_id', $agreement->agree_id)->get();
-        foreach ($departmentAgreements as $departmentAgreement) {
-            $departmentAgreement->delete();
-        }
-
+    
+        // Suppression des relations département-accord
+        DepartmentAgreement::where('agree_id', $agreement->agree_id)->delete();
+    
         // Suppression des favoris
-        $favoris = Favoris::all();
-        foreach ($favoris as $fav){
-            if($fav->agree_id == $agreement->agree_id){
-                $fav->delete();
+        Favoris::where('agree_id', $agreement->agree_id)->delete();
+    
+        // Mise à jour des voeux
+        $wishAgreements = WishAgreement::where('wsha_one', $id)
+            ->orWhere('wsha_two', $id)
+            ->orWhere('wsha_three', $id)
+            ->orWhere('wsha_four', $id)
+            ->orWhere('wsha_five', $id)
+            ->orWhere('wsha_six', $id)
+            ->get();
+    
+        foreach ($wishAgreements as $wishAgreement) {
+            // Mise à jour des champs contenant l'ID de l'accord
+            if ($wishAgreement->wsha_one == $id) {
+                $wishAgreement->wsha_one = null;
             }
-        }
-
-        //Suppression des voeux
-        $voeux = WishAgreement::all();
-        foreach($voeux as $voeu){
-            if($voeu->wsha_one == $id){
-                $voeu->wsha_one = null;
+            if ($wishAgreement->wsha_two == $id) {
+                $wishAgreement->wsha_two = null;
             }
-            if($voeu->wsha_two == $id){
-                $voeu->wsha_two = null;
+            if ($wishAgreement->wsha_three == $id) {
+                $wishAgreement->wsha_three = null;
             }
-            if($voeu->wsha_three == $id){
-                $voeu->wsha_three = null;
+            if ($wishAgreement->wsha_four == $id) {
+                $wishAgreement->wsha_four = null;
             }
-            if($voeu->wsha_four == $id){
-                $voeu->wsha_four = null;
+            if ($wishAgreement->wsha_five == $id) {
+                $wishAgreement->wsha_five = null;
             }
-            if($voeu->wsha_five == $id){
-                $voeu->wsha_five = null;
+            if ($wishAgreement->wsha_six == $id) {
+                $wishAgreement->wsha_six = null;
             }
-            if($voeu->wsha_six == $id){
-                $voeu->wsha_six = null;
-            }
-            $voeu->save();
+    
+            // Enregistrement des modifications
+            $wishAgreement->save();
             
-            // Vérifier si tous les champs sont null
-            if (is_null($voeu->wsha_one) && 
-                is_null($voeu->wsha_two) && 
-                is_null($voeu->wsha_three) && 
-                is_null($voeu->wsha_four) && 
-                is_null($voeu->wsha_five) && 
-                is_null($voeu->wsha_six)) 
+            // Vérification si tous les champs sont null pour supprimer l'enregistrement
+            if (is_null($wishAgreement->wsha_one) && 
+                is_null($wishAgreement->wsha_two) && 
+                is_null($wishAgreement->wsha_three) && 
+                is_null($wishAgreement->wsha_four) && 
+                is_null($wishAgreement->wsha_five) && 
+                is_null($wishAgreement->wsha_six)) 
             {
-                // Supprimer l'enregistrement si tous les champs sont null
-                $voeu->delete();
+                $wishAgreement->delete();
             }
         }
-
+    
         // Suppression des arbitrages liés
-        $arbitrages = Arbitrage::where('agree_id', $agreement->agree_id)->get();
-        foreach ($arbitrages as $arbitrage) {
-            $arbitrage->delete();
-        }
-
+        Arbitrage::where('agree_id', $agreement->agree_id)->delete();
+    
+        // Suppression de l'accord
         $agreement->delete();
-
+    
         return response()->json(['status' => 202, 'message' => 'l\'Accord a été supprimé avec succès.']);
     }
 
