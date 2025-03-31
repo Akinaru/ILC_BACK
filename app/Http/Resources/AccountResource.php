@@ -4,7 +4,6 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Models\Agreement;
 
 class AccountResource extends JsonResource
 {
@@ -56,26 +55,6 @@ class AccountResource extends JsonResource
             ];
         }
 
-        // Vérifier si la destination existe
-        $destination = null;
-        if ($this->resource->destination_id && 
-            $this->resource->destination && 
-            $this->resource->destination->agree_id) {
-            $destination = new AgreementResource($this->resource->destination);
-        }
-
-        // Vérifier si l'arbitrage existe et si l'accord associé existe
-        $arbitrage = null;
-        if ($this->resource->arbitrage && 
-            $this->resource->arbitrage->agreement_id && 
-            $this->resource->arbitrage->agreement && 
-            $this->resource->arbitrage->agreement->agree_id) {
-            $arbitrage = [
-                ...(new AgreementResource($this->resource->arbitrage->agreement))->toArray($request),
-                'status' => \App\Models\Administration::find(1)->adm_arbitragetemporaire ?? false
-            ];
-        }
-
         return [
             'acc_id' => $this->resource->acc_id,
             'acc_fullname' => $this->resource->acc_fullname,
@@ -95,9 +74,17 @@ class AccountResource extends JsonResource
             'access' => $accessResponse,
             'role' => $roleInfo,
             'documents' => $docCount,
-            'destination' => $destination,
-            'arbitrage' => $arbitrage,
+            'destination' => new AgreementResource($this->resource->destination),
+            'arbitrage' => $this->resource->arbitrage 
+                ? [
+                    ...(new AgreementResource($this->resource->arbitrage->agreement))->toArray($request),
+                    'status' => \App\Models\Administration::find(1)->adm_arbitragetemporaire ?? false
+                ] 
+                : null,
             'wishes' => $wishesArray,
         ];
     }
+    
+    
+    
 }
