@@ -389,7 +389,7 @@ class AccountController extends Controller
 
             $account->save();
 
-            return response()->json(['status'=> 201 ,'message' => 'Compl dossier']);
+            return response()->json(['status'=> 201 ,'message' => 'Compl dossier', 'account' => $account]);
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Une erreur s\'est produite lors de l\'ajout du compte.',
