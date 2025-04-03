@@ -200,6 +200,7 @@ class AccountController extends Controller
             'acc_id' => 'required|string',
             'acc_studentnum' => 'required|integer',
             'acc_anneemobilite' => 'nullable|string',
+            'acc_periodemobilite' => 'nullable|integer',
             'dept_id' => 'nullable|integer',
             'acc_mail' => 'string',
             'acc_toeic' => 'required|integer',
@@ -216,6 +217,7 @@ class AccountController extends Controller
         // Mettre à jour les propriétés du compte
         $account->acc_studentnum = $validatedData['acc_studentnum'];
         $account->acc_anneemobilite = $validatedData['acc_anneemobilite'];
+        $account->acc_periodemobilite = $validatedData['acc_periodemobilite'];
         $account->dept_id = isset($validatedData['dept_id']) ? $validatedData['dept_id'] : null;
         $account->acc_mail = $validatedData['acc_mail'] ?? $account->acc_mail;
         $account->acc_toeic = $validatedData['acc_toeic'];
@@ -358,6 +360,7 @@ class AccountController extends Controller
                 'dept_id' => 'required|integer',
                 'acc_amenagement' => 'required|boolean',
                 'acc_anneemobilite' => 'required|string',
+                'acc_periodemobilite' => 'required|integer',
                 'acc_mail' => 'required|string',
                 'acc_amenagementdesc' => 'nullable|string',
                 'acc_parcours' => 'nullable|string',
@@ -374,6 +377,7 @@ class AccountController extends Controller
             $account->acc_studentnum = $validatedData['acc_studentnum'];
             $account->acc_mail = $validatedData['acc_mail'];
             $account->acc_anneemobilite = $validatedData['acc_anneemobilite'];
+            $account->acc_periodemobilite = $validatedData['acc_periodemobilite'];
             $account->dept_id = $validatedData['dept_id'];
             $account->acc_amenagement = $validatedData['acc_amenagement'];
             if(isset($validatedData['acc_amenagementdesc'])){

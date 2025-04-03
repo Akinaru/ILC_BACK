@@ -63,6 +63,7 @@ class AccountResource extends JsonResource
             'acc_amenagement' => $this->resource->acc_amenagement,
             'acc_amenagemendesc' => $this->resource->acc_amenagementdesc,
             'acc_anneemobilite' => $this->resource->acc_anneemobilite,
+            'acc_periodemobilite' => $this->resource->acc_periodemobilite,
             'acc_temoignage' => $this->resource->acc_temoignage,
             'acc_validechoixcours' => (bool) $this->resource->acc_validechoixcours,
             'acc_toeic' => $this->resource->acc_toeic,
