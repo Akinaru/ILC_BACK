@@ -35,6 +35,7 @@ class Account extends Authenticatable
         'acc_amenagementdesc',
         'acc_ancienetuconsent',
         'acc_anneemobilite',
+        'acc_periodemobilite',
         'acc_temoignage',
         'acc_arbitragefait',
         'agree_id'

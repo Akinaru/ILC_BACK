@@ -43,6 +43,18 @@ class AccountResource extends JsonResource
         $roleInfo = $this->getRoleInfo();
         $docCount = $this->getFileCount();
 
+        $accessResponse = null;
+        if ($this->resource->access) {
+            $accessResponse = [
+                'access' => $this->resource->access,
+                'count' => 1,
+            ];
+        } else {
+            $accessResponse = [
+                'count' => 0,
+            ];
+        }
+
         return [
             'acc_id' => $this->resource->acc_id,
             'acc_fullname' => $this->resource->acc_fullname,
@@ -51,6 +63,7 @@ class AccountResource extends JsonResource
             'acc_amenagement' => $this->resource->acc_amenagement,
             'acc_amenagemendesc' => $this->resource->acc_amenagementdesc,
             'acc_anneemobilite' => $this->resource->acc_anneemobilite,
+            'acc_periodemobilite' => $this->resource->acc_periodemobilite,
             'acc_temoignage' => $this->resource->acc_temoignage,
             'acc_validechoixcours' => (bool) $this->resource->acc_validechoixcours,
             'acc_toeic' => $this->resource->acc_toeic,
@@ -59,7 +72,7 @@ class AccountResource extends JsonResource
             'acc_validateacc' => (bool) $this->resource->acc_validateacc,
             'acc_arbitragefait' => (bool) $this->resource->acc_arbitragefait,
             'department' => $this->resource->department,
-            'access' => $this->resource->access,
+            'access' => $accessResponse,
             'role' => $roleInfo,
             'documents' => $docCount,
             'destination' => new AgreementResource($this->resource->destination),

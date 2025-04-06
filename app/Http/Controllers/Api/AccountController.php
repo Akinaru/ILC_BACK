@@ -8,6 +8,7 @@ use App\Http\Resources\AccountResource;
 use App\Models\Account;
 use App\Models\Access;
 use App\Models\WishAgreement;
+use App\Models\Favoris;
 use App\Models\AcceptedAccount;
 use App\Models\Arbitrage;
 use Illuminate\Support\Facades\DB;
@@ -94,9 +95,10 @@ class AccountController extends Controller
             return response()->json([
                 'status'=> 201,
                 'message' => 'Compte créé avec succès',
-                'account' => $account,
+                'account' => new AccountResource($account),
                 'token' => $token,
-                'access' => $access ? $access->acs_accounttype : 0
+                'access' => $access ? $access->acs_accounttype : 0,
+                
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -198,6 +200,7 @@ class AccountController extends Controller
             'acc_id' => 'required|string',
             'acc_studentnum' => 'required|integer',
             'acc_anneemobilite' => 'nullable|string',
+            'acc_periodemobilite' => 'nullable|integer',
             'dept_id' => 'nullable|integer',
             'acc_mail' => 'string',
             'acc_toeic' => 'required|integer',
@@ -214,6 +217,7 @@ class AccountController extends Controller
         // Mettre à jour les propriétés du compte
         $account->acc_studentnum = $validatedData['acc_studentnum'];
         $account->acc_anneemobilite = $validatedData['acc_anneemobilite'];
+        $account->acc_periodemobilite = $validatedData['acc_periodemobilite'];
         $account->dept_id = isset($validatedData['dept_id']) ? $validatedData['dept_id'] : null;
         $account->acc_mail = $validatedData['acc_mail'] ?? $account->acc_mail;
         $account->acc_toeic = $validatedData['acc_toeic'];
@@ -227,82 +231,79 @@ class AccountController extends Controller
     
     public function deleteById($id)
     {
-
-
         $account = Account::find($id);
     
         if (!$account) {
-            return response()->json(['status' => 404, 'message' => 'Compte non trouvée.']);
+            return response()->json(['status' => 404, 'message' => 'Compte non trouvé.']);
         }
-        $access = Access::where('acc_id', $id)->first();
-        if ($access) {
-            $access->delete();
-        }
-        $acceptedaccount = AcceptedAccount::where('acc_id', $id)->first();
-        if ($acceptedaccount) {
-            $acceptedaccount->delete();
-        }
-        $voeux = WishAgreement::where('acc_id', $id)->first();
-        if ($voeux) {
-            $voeux->delete();
-        }
-        $arbitrage = Arbitrage::where('acc_id', $id)->first();
-        if ($arbitrage) {
-            $arbitrage->delete();
-        }
-    
+        
+        // Suppression des accès
+        Access::where('acc_id', $id)->delete();
+        
+        // Suppression des comptes acceptés
+        AcceptedAccount::where('acc_id', $id)->delete();
+        
+        // Suppression de TOUS les vœux associés au compte (pas seulement le premier)
+        WishAgreement::where('acc_id', $id)->delete();
+        
+        // Suppression de TOUS les arbitrages associés au compte (pas seulement le premier)
+        Arbitrage::where('acc_id', $id)->delete();
+        
+        // Suppression des favoris associés au compte
+        Favoris::where('acc_id', $id)->delete();
+        
+        // Suppression du compte
         $account->delete();
-
+    
         // Appel des méthodes deletePerso dans le DocumentController
         $documentController = new DocumentsController();
         $documentController->deletePerso('choix_cours', 'choix_cours_'.$id);
         $documentController->deletePerso('contrat_peda', 'contrat_peda_'.$id);
         $documentController->deletePerso('releve_note', 'releve_note_'.$id);
     
-        return response()->json(['status' => 202, 'message' => 'Le compte a été supprimée avec succès.']);
+        return response()->json(['status' => 202, 'message' => 'Le compte a été supprimé avec succès.']);
     }
-
+    
     public function selfDelete(Request $request)
     {
-
         $validatedData = $request->validate([
             'acc_id' => 'required|string',
         ]);
         
         $request->user()->currentAccessToken()->delete();
         $id = $validatedData['acc_id'];
-
+    
         $account = Account::find($id);
     
         if (!$account) {
-            return response()->json(['status' => 404, 'message' => 'Compte non trouvée.']);
+            return response()->json(['status' => 404, 'message' => 'Compte non trouvé.']);
         }
-        $access = Access::where('acc_id', $id)->first();
-        if ($access) {
-            $access->delete();
-        }
-        $acceptedaccount = AcceptedAccount::where('acc_id', $id)->first();
-        if ($acceptedaccount) {
-            $acceptedaccount->delete();
-        }
-        $voeux = WishAgreement::where('acc_id', $id)->first();
-        if ($voeux) {
-            $voeux->delete();
-        }
-        $arbitrage = Arbitrage::where('acc_id', $id)->first();
-        if ($arbitrage) {
-            $arbitrage->delete();
-        }
-    
+        
+        // Suppression des accès
+        Access::where('acc_id', $id)->delete();
+        
+        // Suppression des comptes acceptés
+        AcceptedAccount::where('acc_id', $id)->delete();
+        
+        // Suppression de TOUS les vœux associés au compte (pas seulement le premier)
+        WishAgreement::where('acc_id', $id)->delete();
+        
+        // Suppression de TOUS les arbitrages associés au compte (pas seulement le premier)
+        Arbitrage::where('acc_id', $id)->delete();
+        
+        // Suppression des favoris associés au compte
+        Favoris::where('acc_id', $id)->delete();
+        
+        // Suppression du compte
         $account->delete();
-
+    
         // Appel des méthodes deletePerso dans le DocumentController
         $documentController = new DocumentsController();
         $documentController->deletePerso('choix_cours', 'choix_cours_'.$id);
         $documentController->deletePerso('contrat_peda', 'contrat_peda_'.$id);
         $documentController->deletePerso('releve_note', 'releve_note_'.$id);
     
-        return response()->json(['status' => 202, 'message' => 'Le compte a été supprimée avec succès.']);
+        return response()->json(['status' => 202, 'message' => 'Le compte a été supprimé avec succès.']);
     }
        
     public function login($id)
@@ -359,6 +360,7 @@ class AccountController extends Controller
                 'dept_id' => 'required|integer',
                 'acc_amenagement' => 'required|boolean',
                 'acc_anneemobilite' => 'required|string',
+                'acc_periodemobilite' => 'required|integer',
                 'acc_mail' => 'required|string',
                 'acc_amenagementdesc' => 'nullable|string',
                 'acc_parcours' => 'nullable|string',
@@ -375,6 +377,7 @@ class AccountController extends Controller
             $account->acc_studentnum = $validatedData['acc_studentnum'];
             $account->acc_mail = $validatedData['acc_mail'];
             $account->acc_anneemobilite = $validatedData['acc_anneemobilite'];
+            $account->acc_periodemobilite = $validatedData['acc_periodemobilite'];
             $account->dept_id = $validatedData['dept_id'];
             $account->acc_amenagement = $validatedData['acc_amenagement'];
             if(isset($validatedData['acc_amenagementdesc'])){
@@ -387,8 +390,9 @@ class AccountController extends Controller
             $account->acc_validateacc = true;
 
             $account->save();
+            
 
-            return response()->json(['status'=> 201 ,'message' => 'Compl dossier']);
+            return response()->json(['status'=> 201 ,'message' => 'Compl dossier', 'account' => new AccountResource($account)]);
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Une erreur s\'est produite lors de l\'ajout du compte.',
