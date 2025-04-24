@@ -8,6 +8,10 @@ use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use App\Models\Account;
+use App\Models\Document;
+use App\Models\Article;
+use App\Models\DocumentArticle;
+use App\Http\Resources\DocumentResource;
 
 class DocumentsController extends Controller
 {
@@ -286,4 +290,138 @@ class DocumentsController extends Controller
         }
     }
 
+    //Fonctions pour gérer les documents des articles
+
+    //Récupère tout les documents enregistrés sur la BD pour permettre leur attribution
+    public function getAllDocumentsForArticle(){
+        $documents = Document::All();
+
+        $documentCollection = DocumentResource::collection($documents);
+
+        return response()->json([
+            'documents' => $documentCollection,
+            'count' => $documentCollection->count(),
+        ]);
+    }
+
+    // Récupère les documents attibués à un article en paramètre
+    public function getDocumentArticle($idarticle)
+    {
+        try {
+            if (!$idarticle) {
+                return response()->json([
+                    'status' => '400',
+                    'error' => 'Paramètres manquants',
+                    'message' => 'Le numéro de l\'article est requis'
+                ]);
+            }
+
+            $article =  Article::findOrFail($idarticle);
+            $documents = $article->documents;
+            
+            // Cherche les fichiers
+            $documentCollection = DocumentResource::collection($documents);
+
+            return response()->json([
+                'documents' => $documentCollection,
+                'count' => $documentCollection->count(),
+            ]);
+    
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Une erreur s\'est produite lors de la récupération des documents.',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    //upload un nouveau document sur le serveur et l'enregistre dans la BD pour permettre sa réutilisationà
+    public function uploadDocumentArticle(Request $request)
+    {
+        if($request->input('isNewOrOverride') == true){ //Dans le cas d'un nouveau document
+            try {
+                // Valider les champs de la requête
+                $validatedData = $request->validate([
+                    'file' => 'required|file|mimes:pdf,xls,xlsx,docx,pptx,odt|max:20480', // Maximum 20MB
+                    'title' => 'required|string|max:255',
+                    'folder' => 'required|string|max:255',
+                    'articleId' => 'required|string',
+                ]);
+        
+                // Vérifier si le fichier est présent dans la requête
+                if (!$request->hasFile('file')) {
+                    return response()->json([
+                        'error' => 'Aucun fichier trouvé dans la requête.'
+                    ], 400);
+                }
+        
+                $file = $request->file('file');
+                $title = $request->input('title');
+                $folder = $request->input('folder');
+                $art_id = $request->input('articleId');
+        
+                // Construire le chemin complet du fichier avec un nom unique
+                $filePath = '/documents' . $folder . '/' . $title;
+        
+                // Stocker le nouveau fichier dans le dossier private
+                $file->storeAs('/documents' . $folder, $title, 'private');
+                
+                //Vérification que le document ajouté n'existe pas déjà (dans le cas d'un écrasement)
+                if(!Document::where('doc_name', $validatedData['title'])){
+                    //Enregistrement des informations du document dans la BD
+                    $newDocument = new Document();
+                    $newDocument->doc_name = $validatedData['title'];
+                    $newDocument->doc_path = $validatedData['folder'];
+                    $newDocument->save();
+                }
+
+                $selectedDoc = Document::where('doc_name', $validatedData['title']);
+
+                //Attibution du document à l'article
+                $NewdocumentArticle = new DocumentArticle();
+                $NewdocumentArticle->art_id = $art_id;
+                $NewdocumentArticle->doc_id = $selectedDoc->doc_id;
+                $NewdocumentArticle->save();
+    
+                return response()->json([
+                    'status' => 200,
+                    'message' => 'Fichier mis en ligne avec succès.',
+                    'path' => $filePath,
+                ]);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'error' => 'Une erreur s\'est produite lors de l\'upload du fichier.',
+                    'message' => $e->getMessage(),
+                ], 500);
+            }
+        }
+        else{
+            try {
+                // Valider les champs de la requête
+                $validatedData = $request->validate([
+                    'articleId' => 'required|string',
+                    'fileId' => 'required|string',
+                ]);
+        
+                $art_id = $request->input('articleId');
+                $doc_id = $request->input('fileId');
+    
+                //attribution du document
+                $NewdocumentArticle = new DocumentArticle();
+                $NewdocumentArticle->art_id = $art_id;
+                $NewdocumentArticle->doc_id = $doc_id;
+                $NewdocumentArticle->save();
+    
+                return response()->json([
+                    'status' => 200,
+                    'message' => 'Fichier attribué avec succès.',
+                ]);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'error' => 'Une erreur s\'est produite lors de l\'attribution du fichier.',
+                    'message' => $e->getMessage(),
+                ], 500);
+            }
+        }
+    }
 }

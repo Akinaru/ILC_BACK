@@ -244,3 +244,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/documents/deleteperso/{folder}/{filename}', [DocumentsController::class, 'deletePerso']);
     Route::get('/documents/get/{folder}/{filename}', [DocumentsController::class, 'getDocument']);
     Route::get('/documents/getperso/etu/{folder}/{filename}', [DocumentsController::class, 'getMyDocument']);
+
+/** Routes gestion documents pour articles */
+Route::post('/documents/article', [DocumentsController::class, 'uploadDocumentArticle']);
+Route::get('/documents/article', [DocumentsController::class, 'getAllDocumentsForArticle']);
+Route::get('/documents/article/{idarticle}', [DocumentsController::class, 'getDocumentArticle']);

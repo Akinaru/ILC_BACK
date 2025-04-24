@@ -24,6 +24,11 @@ class Article extends Model
         'art_pin',
         'art_image',
     ];
+
+    public function documents()
+    {
+        return $this->belongsToMany(Document::class, 't_j_documentarticle_docart', 'art_id', 'doc_id');
+    }
 }
 
 
