@@ -335,6 +335,35 @@ class DocumentsController extends Controller
         }
     }
 
+    public function downloadDocumentArticle($filename)
+    {
+        // Assurez-vous que l'utilisateur a le droit d'accéder à ce fichier, selon vos règles de sécurité.
+    
+        // Construire le chemin complet du fichier
+        $filePath = storage_path('app/private/documents/admin/article/' . $filename);
+    
+        // Vérifier si le fichier existe
+        if (file_exists($filePath)) {
+            // Créer une réponse binaire pour le fichier
+            $response = new BinaryFileResponse($filePath);
+    
+            // Vérifier si le fichier est un PDF
+            if (strtolower(pathinfo($filename, PATHINFO_EXTENSION)) === 'pdf') {
+                // Désactiver la mise en cache pour le PDF
+                $response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+            } else {
+                // Forcer le téléchargement pour les autres types de fichiers
+                $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, $filename);
+            }
+    
+            // Retourner la réponse
+            return $response;
+        } else {
+            // Retourner une réponse d'erreur si le fichier n'existe pas
+            abort(404);
+        }
+    }
+
     //upload un nouveau document sur le serveur et l'enregistre dans la BD pour permettre sa réutilisation
     public function uploadDocumentArticle(Request $request)
     {

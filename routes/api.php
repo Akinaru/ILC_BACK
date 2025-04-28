@@ -249,3 +249,4 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::post('/documents/article', [DocumentsController::class, 'uploadDocumentArticle']);
 Route::get('/documents/article', [DocumentsController::class, 'getAllDocumentsForArticle']);
 Route::get('/documents/article/{idarticle}', [DocumentsController::class, 'getDocumentArticle']);
+Route::get('/documents/article/get/{filename}', [DocumentsController::class, 'downloadDocumentArticle']);
