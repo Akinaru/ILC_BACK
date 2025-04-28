@@ -9,6 +9,7 @@ use App\Http\Resources\ArticleResource;
 use Illuminate\Support\Facades\DB;
 use App\Models\Article;
 use Illuminate\Support\Facades\Storage;
+use App\Models\DocumentArticle;
 
 class ArticleController extends Controller
 {
@@ -73,6 +74,16 @@ class ArticleController extends Controller
         if (!$article) {
             return response()->json(['message' => 'Article non trouvé.'], 404);
         }
+
+        // Supprime les liens entre l'article et ses documents s'il en possède
+        if($article->documents){
+            $documentsArticle = DocumentArticle::where('art_id', $id)
+            ->get();
+        
+            foreach($documentsArticle as $doc){
+                $doc->delete();
+            }
+        }
     
         // Supprimer l'image du stockage si elle existe
         if ($article->art_image) {
@@ -85,6 +96,27 @@ class ArticleController extends Controller
         $article->delete();
     
         return response()->json(['status' => 202, 'message' => 'Article supprimé avec succès.']);
+    }
+
+    public function unlinkDocuments($id)
+    {
+        $article = Article::find($id);
+    
+        if (!$article) {
+            return response()->json(['message' => 'Article non trouvé.'], 404);
+        }
+
+        // Supprime les liens entre l'article et ses documents s'il en possède
+        if($article->documents){
+            $documentsArticle = DocumentArticle::where('art_id', $id)
+            ->get();
+        
+            foreach($documentsArticle as $doc){
+                $doc->delete();
+            }
+        }
+    
+        return response()->json(['status' => 202, 'message' => 'DocumentArticles supprimés.']);
     }
 
     public function put(Request $request)

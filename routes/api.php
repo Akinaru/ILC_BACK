@@ -39,6 +39,7 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::post('/article', [ArticleController::class, 'store']);
     Route::delete('/article/deletebyid/{id}', [ArticleController::class, 'deleteById']);
 });
+Route::get('/article/unlinkdocuments/{id}', [ArticleController::class, 'unlinkDocuments']);
 
 /** Routes action */
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
