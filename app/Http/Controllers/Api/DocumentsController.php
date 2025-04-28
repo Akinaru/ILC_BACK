@@ -335,10 +335,10 @@ class DocumentsController extends Controller
         }
     }
 
-    //upload un nouveau document sur le serveur et l'enregistre dans la BD pour permettre sa réutilisationà
+    //upload un nouveau document sur le serveur et l'enregistre dans la BD pour permettre sa réutilisation
     public function uploadDocumentArticle(Request $request)
     {
-        if($request->input('isNewOrOverride') == true){ //Dans le cas d'un nouveau document
+        if($request->input('isNewOrOverride') == "true"){ //Dans le cas d'un nouveau document
             try {
                 // Valider les champs de la requête
                 $validatedData = $request->validate([
@@ -367,7 +367,7 @@ class DocumentsController extends Controller
                 $file->storeAs('/documents' . $folder, $title, 'private');
                 
                 //Vérification que le document ajouté n'existe pas déjà (dans le cas d'un écrasement)
-                if(!Document::where('doc_name', $validatedData['title'])){
+                if(Document::where('doc_name', $validatedData['title'])->first() == null){
                     //Enregistrement des informations du document dans la BD
                     $newDocument = new Document();
                     $newDocument->doc_name = $validatedData['title'];
@@ -375,7 +375,7 @@ class DocumentsController extends Controller
                     $newDocument->save();
                 }
 
-                $selectedDoc = Document::where('doc_name', $validatedData['title']);
+                $selectedDoc = Document::where('doc_name', $validatedData['title'])->first();
 
                 //Attibution du document à l'article
                 $NewdocumentArticle = new DocumentArticle();
@@ -407,10 +407,12 @@ class DocumentsController extends Controller
                 $doc_id = $request->input('fileId');
     
                 //attribution du document
-                $NewdocumentArticle = new DocumentArticle();
-                $NewdocumentArticle->art_id = $art_id;
-                $NewdocumentArticle->doc_id = $doc_id;
-                $NewdocumentArticle->save();
+                if(DocumentArticle::where('art_id', $validatedData['articleId'])->where('doc_id', $validatedData['fileId'])->first() == null){ //Vérification si l'user met par mégarde deux fois le même doc
+                    $NewdocumentArticle = new DocumentArticle();
+                    $NewdocumentArticle->art_id = $art_id;
+                    $NewdocumentArticle->doc_id = $doc_id;
+                    $NewdocumentArticle->save();
+                }
     
                 return response()->json([
                     'status' => 200,
