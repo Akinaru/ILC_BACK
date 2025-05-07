@@ -294,7 +294,7 @@ class DocumentsController extends Controller
 
     //Récupère tout les documents enregistrés sur la BD pour permettre leur attribution
     public function getAllDocumentsForArticle(){
-        $documents = Document::All();
+        $documents = Document::orderBy('doc_name', 'asc')->get();
 
         $documentCollection = DocumentResource::collection($documents);
 
