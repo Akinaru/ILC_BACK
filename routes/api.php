@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\DocumentsController;
 use App\Http\Controllers\Api\ArbitrageController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\DataBaseController;
+use App\Http\Controllers\MobileAppController;
 
 /** Route Auth */
 Route::post('/login', [AuthController::class, 'login']);
@@ -251,3 +252,5 @@ Route::post('/documents/article', [DocumentsController::class, 'uploadDocumentAr
 Route::get('/documents/article', [DocumentsController::class, 'getAllDocumentsForArticle']);
 Route::get('/documents/article/{idarticle}', [DocumentsController::class, 'getDocumentArticle']);
 Route::get('/documents/article/get/{filename}', [DocumentsController::class, 'downloadDocumentArticle']);
+
+Route::get('/mobileapp/exportdata', [MobileAppController::class, 'exportForMobileApp']);
