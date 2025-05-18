@@ -141,6 +141,7 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/account', [AccountController::class, 'index']);
     Route::get('/account/students', [AccountController::class, 'students']);
+    Route::get('/account/students/actuel', [AccountController::class, 'studentsActuel']);
     Route::get('/account/getbydept/{dept_id}', [AccountController::class, 'getByDept']);
     Route::put('/account/temoignage', [AccountController::class, 'temoignage']);
     Route::put('/account/modifetu', [AccountController::class, 'modifEtu']);
@@ -223,6 +224,7 @@ Route::get('/acceptedaccount/getbylogin/{login}', [AcceptedAccountController::cl
 Route::get('/arbitrage/getbyid/{acc_id}', [ArbitrageController::class, 'showByAccId']);
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::get('/arbitrage', [ArbitrageController::class, 'index']);
+    Route::get('/arbitrage/actuel', [ArbitrageController::class, 'indexActuel']);
     Route::post('/arbitrage', [ArbitrageController::class, 'saveArbitrage']);
     Route::post('/arbitrage/archiver', [ArbitrageController::class, 'archiverArbitrage']);
     Route::put('/arbitrage', [ArbitrageController::class, 'modifArbitrage']);

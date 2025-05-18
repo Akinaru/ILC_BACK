@@ -42,6 +42,21 @@ class AccountController extends Controller
         ]);
     }
 
+    public function studentsActuel()
+    {
+        $accountsWithoutAccess = Account::where('acc_arbitragefait', false)
+            ->doesntHave('access')
+            ->orderBy('acc_fullname')
+            ->get();
+    
+        $accountCollection = AccountResource::collection($accountsWithoutAccess)->all();
+    
+        return response()->json([
+            'accounts' => $accountCollection,
+            'count' => $accountsWithoutAccess->count(),
+        ]);
+    }
+
     public function getByLogin($login)
     {
         try {

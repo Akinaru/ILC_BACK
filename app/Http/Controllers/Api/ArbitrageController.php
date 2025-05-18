@@ -14,6 +14,15 @@ class ArbitrageController extends Controller
         return ArbitrageResource::collection(Arbitrage::all())->all();
     }
 
+    public function indexActuel()
+    {
+        $arbitrages = Arbitrage::whereHas('account', function ($query) {
+            $query->where('acc_arbitragefait', false);
+        })->get();
+    
+        return ArbitrageResource::collection($arbitrages)->all();
+    }
+
     public function saveArbitrage(Request $request)
     {
         // Validation des données d'entrée
