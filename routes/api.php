@@ -42,9 +42,11 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
 Route::get('/article/unlinkdocuments/{id}', [ArticleController::class, 'unlinkDocuments']);
 
 /** Routes action */
+Route::get('/action/paginate', [ActionController::class, 'paginateActions']);
+
+
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::get('/action', [ActionController::class, 'index']);
-    Route::get('/action/paginate', [ActionController::class, 'paginateActions']);
     Route::get('/action/getbyid/{id}', [ActionController::class, 'getById']);
     Route::get('/action/getbylogin/{login}', [ActionController::class, 'getByLogin']);
     Route::post('/action', [ActionController::class, 'store']);
