@@ -32,16 +32,20 @@ class ActionController extends Controller
     {
         try {
             $perPage = min(max((int) $request->get('per_page', 25), 1), 100);
-            $query = Action::query()->orderBy('act_date', 'desc');
     
-            // Filtre : types d'actions (ex: login, admin, etc.)
+            $query = Action::query()
+                ->with('account') // Charge la relation pour récupérer le fullname
+                ->orderBy('act_date', 'desc');
+    
+            // Filtre : types d'actions
             if ($request->has('types') && is_array($request->types)) {
                 $query->whereIn('act_type', $request->types);
             }
     
-            // Recherche par acc_id OU acc_fullname
+            // Recherche acc_id OU account.acc_fullname
             if ($request->filled('search')) {
                 $search = strtolower($request->get('search'));
+    
                 $query->where(function ($q) use ($search) {
                     $q->whereRaw('LOWER(acc_id) LIKE ?', ["%$search%"])
                       ->orWhereHas('account', function ($sub) use ($search) {
@@ -52,9 +56,21 @@ class ActionController extends Controller
     
             $actions = $query->paginate($perPage);
     
+            // On formate les actions avec le champ acc_fullname
+            $data = $actions->getCollection()->map(function ($action) {
+                return [
+                    'act_id' => $action->act_id,
+                    'acc_id' => $action->acc_id,
+                    'acc_fullname' => $action->account->acc_fullname ?? null,
+                    'act_description' => $action->act_description,
+                    'act_date' => $action->act_date,
+                    'act_type' => $action->act_type,
+                ];
+            });
+    
             return response()->json([
                 'status' => 200,
-                'data' => $actions->items(),
+                'data' => $data,
                 'pagination' => [
                     'current_page' => $actions->currentPage(),
                     'per_page' => $actions->perPage(),
