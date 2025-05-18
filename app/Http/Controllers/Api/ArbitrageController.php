@@ -75,7 +75,6 @@ class ArbitrageController extends Controller
         
         foreach ($arbitrages as $arbitrage) {
             // Vérifier si l'acc_id est "abelar" (vérification temporaire)
-            if ($arbitrage->acc_id === "abelar" || $arbitrage->acc_id === "boucelis") {
                 // Récupérer tous les comptes qui ont le même acc_id que l'arbitrage
                 $accounts = Account::where('acc_id', $arbitrage->acc_id)->get();
                 
@@ -88,7 +87,6 @@ class ArbitrageController extends Controller
                 
                 // Supprimer l'arbitrage après avoir mis à jour les comptes
                 $arbitrage->delete();
-            }
         }
         
         return response()->json(['message' => 'Arbitrages archivés avec succès', 'status' => 200]);
