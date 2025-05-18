@@ -33,6 +33,11 @@ class Action extends Model
         return $this->hasOne(Account::class, 'acc_id', 'acc_id');
     } 
 
+    public function account()
+    {
+        return $this->hasOne(Account::class, 'acc_id', 'acc_id');
+    } 
+
     public function department()
     {
         return $this->hasOne(Department::class, 'dept_id', 'dept_id');
