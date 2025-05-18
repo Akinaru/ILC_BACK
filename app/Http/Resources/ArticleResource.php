@@ -22,7 +22,8 @@ class ArticleResource extends JsonResource
             'art_datesortie' => $this->resource->art_datesortie, 
             'art_creationdate' => $this->resource->art_creationdate, 
             'art_pin' => (bool) $this->resource->art_pin,
-            'art_image' => $this->resource->art_image
+            'art_image' => $this->resource->art_image,
+            'documents' => $this->resource->documents
         ];
     }
 }
