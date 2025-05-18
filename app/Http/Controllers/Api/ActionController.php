@@ -34,25 +34,19 @@ class ActionController extends Controller
             $perPage = min(max((int) $request->get('per_page', 25), 1), 100);
             $query = Action::query()->orderBy('act_date', 'desc');
     
-            // Filtre par types (array de strings)
-            if ($request->has('types')) {
-                $types = $request->get('types');
-                if (is_array($types)) {
-                    $query->whereIn('act_type', $types);
-                }
+            // Filtre : types d'actions (ex: login, admin, etc.)
+            if ($request->has('types') && is_array($request->types)) {
+                $query->whereIn('act_type', $request->types);
             }
     
-            // Filtre par recherche
+            // Recherche par acc_id OU acc_fullname
             if ($request->filled('search')) {
                 $search = strtolower($request->get('search'));
-    
                 $query->where(function ($q) use ($search) {
-                    $q->whereRaw('LOWER(acc_id) LIKE ?', ["%$search%"]);
-                });
-    
-                // Si tu as une relation avec un modèle Account :
-                $query->orWhereHas('account', function ($q) use ($search) {
-                    $q->whereRaw('LOWER(acc_fullname) LIKE ?', ["%$search%"]);
+                    $q->whereRaw('LOWER(acc_id) LIKE ?', ["%$search%"])
+                      ->orWhereHas('account', function ($sub) use ($search) {
+                          $sub->whereRaw('LOWER(acc_fullname) LIKE ?', ["%$search%"]);
+                      });
                 });
             }
     
