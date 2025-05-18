@@ -28,14 +28,36 @@ class ActionController extends Controller
         return ActionResource::collection($actions);
     }
 
-    public function paginateActions($perPage = 25) // Changé de 10 à 25
+    public function paginateActions(Request $request)
     {
         try {
-            $perPage = min(max((int)$perPage, 1), 100);
-            
-            $actions = Action::orderBy('act_date', 'desc')
-                ->paginate($perPage);
-                
+            $perPage = min(max((int) $request->get('per_page', 25), 1), 100);
+            $query = Action::query()->orderBy('act_date', 'desc');
+    
+            // Filtre par types (array de strings)
+            if ($request->has('types')) {
+                $types = $request->get('types');
+                if (is_array($types)) {
+                    $query->whereIn('act_type', $types);
+                }
+            }
+    
+            // Filtre par recherche
+            if ($request->filled('search')) {
+                $search = strtolower($request->get('search'));
+    
+                $query->where(function ($q) use ($search) {
+                    $q->whereRaw('LOWER(acc_id) LIKE ?', ["%$search%"]);
+                });
+    
+                // Si tu as une relation avec un modèle Account :
+                $query->orWhereHas('account', function ($q) use ($search) {
+                    $q->whereRaw('LOWER(acc_fullname) LIKE ?', ["%$search%"]);
+                });
+            }
+    
+            $actions = $query->paginate($perPage);
+    
             return response()->json([
                 'status' => 200,
                 'data' => $actions->items(),
