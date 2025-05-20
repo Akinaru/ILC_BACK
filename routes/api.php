@@ -179,6 +179,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
     Route::put('/account/temoignage', [AccountController::class, 'temoignage']);
+    Route::delete('/account/temoignage', [AccountController::class, 'supprimerTemoignage']);
     Route::put('/account/modifetu', [AccountController::class, 'modifEtu']);
     Route::delete('/account/selfdelete', [AccountController::class, 'selfDelete']);
     Route::delete('/account/{acc_id}', [AccountController::class, 'deleteNoAccepted']);

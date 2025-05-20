@@ -149,7 +149,6 @@ class AccountController extends Controller
                 'status' => 200,
                 'message' => 'Témoignage modifié avec succès !',
                 'account' => $account,
-                'merde' => $validatedData['acc_temoignage']
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -158,6 +157,41 @@ class AccountController extends Controller
             ], 500);
         }
     }
+
+    public function supprimerTemoignage(Request $request)
+{
+    try {
+        $validatedData = $request->validate([
+            'acc_id' => 'required|string',
+        ]);
+
+        // Trouver le compte
+        $account = Account::find($validatedData['acc_id']);
+
+        if (!$account) {
+            return response()->json([
+                'status' => 404,
+                'message' => 'Compte non trouvé',
+            ]);
+        }
+
+        // Suppression du témoignage
+        $account->acc_temoignage = null;
+        $account->save();
+
+        return response()->json([
+            'status' => 200,
+            'message' => 'Témoignage supprimé avec succès.',
+            'pour' => $account,
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Une erreur s\'est produite lors de la suppression du témoignage.',
+            'message' => $e->getMessage()
+        ], 500);
+    }
+}
+
 
     public function validateChoixCours($id)
     {
