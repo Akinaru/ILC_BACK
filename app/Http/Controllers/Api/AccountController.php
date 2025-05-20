@@ -218,7 +218,7 @@ class AccountController extends Controller
         // Valider les données de la requête
         $validatedData = $request->validate([
             'acc_id' => 'required|string',
-            'acc_studentnum' => 'required|integer',
+            'acc_studentnum' => 'required|string',
             'acc_parcours' => 'nullable|string',
             'acc_mail' => 'string',
         ]);
@@ -246,7 +246,7 @@ class AccountController extends Controller
         // Valider les données de la requête
         $validatedData = $request->validate([
             'acc_id' => 'required|string',
-            'acc_studentnum' => 'required|integer',
+            'acc_studentnum' => 'required|string',
             'acc_anneemobilite' => 'nullable|string',
             'acc_periodemobilite' => 'nullable|integer',
             'dept_id' => 'nullable|integer',
