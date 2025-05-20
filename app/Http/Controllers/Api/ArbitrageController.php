@@ -100,4 +100,40 @@ class ArbitrageController extends Controller
         
         return response()->json(['message' => 'Arbitrages archivés avec succès', 'status' => 200]);
     }
+
+    public function desarchiver(Request $request)
+    {
+        try {
+            $validatedData = $request->validate([
+                'acc_id' => 'required|string',
+            ]);
+
+            // Trouver le compte
+            $account = Account::find($validatedData['acc_id']);
+
+            if (!$account) {
+                return response()->json([
+                    'status' => 404,
+                    'message' => 'Compte non trouvé',
+                ]);
+            }
+
+            // Mise à jour : retirer l'archivage
+            $account->acc_arbitragefait = false;
+            $account->save();
+
+            return response()->json([
+                'status' => 200,
+                'message' => 'Compte désarchivé avec succès.',
+                'account' => $account,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 500,
+                'error' => 'Une erreur s\'est produite lors du désarchivage.',
+                'message' => $e->getMessage(),
+            ]);
+        }
+    }
+
 }

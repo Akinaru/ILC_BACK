@@ -275,6 +275,7 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::get('/arbitrage/actuel', [ArbitrageController::class, 'indexActuel']);
     Route::post('/arbitrage', [ArbitrageController::class, 'saveArbitrage']);
     Route::post('/arbitrage/archiver', [ArbitrageController::class, 'archiverArbitrage']);
+    Route::post('/arbitrage/desarchiver', [ArbitrageController::class, 'desarchiver']);
     Route::put('/arbitrage', [ArbitrageController::class, 'modifArbitrage']);
 });
 
