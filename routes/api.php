@@ -53,6 +53,7 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::get('/action', [ActionController::class, 'index']);
     Route::get('/action/getbyid/{id}', [ActionController::class, 'getById']);
     Route::get('/action/getbylogin/{login}', [ActionController::class, 'getByLogin']);
+    Route::get('/action/getfivebylogin/{login}', [ActionController::class, 'getFiveByLogin']);
     Route::post('/action', [ActionController::class, 'store']);
     Route::delete('/action', [ActionController::class, 'delete']);
     Route::get('/action/paginate', [ActionController::class, 'paginateActions']);

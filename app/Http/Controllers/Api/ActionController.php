@@ -28,6 +28,17 @@ class ActionController extends Controller
         return ActionResource::collection($actions);
     }
 
+    public function getFiveByLogin($login)
+    {
+        $actions = Action::where('acc_id', $login)
+            ->orderBy('act_date', 'desc')
+            ->limit(5)
+            ->get();
+    
+        return ActionResource::collection($actions);
+    }
+    
+
     public function paginateActions(Request $request)
     {
         try {
