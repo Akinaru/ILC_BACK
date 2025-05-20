@@ -182,7 +182,6 @@ class AccountController extends Controller
         return response()->json([
             'status' => 200,
             'message' => 'Témoignage supprimé avec succès.',
-            'pour' => $account,
         ]);
     } catch (\Exception $e) {
         return response()->json([
