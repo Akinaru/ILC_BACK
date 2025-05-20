@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Resources\AgreementResource;
+use App\Http\Resources\WishAgreementResource;
+use App\Http\Resources\FavorisResource;
 use App\Models\Agreement;
 use App\Models\DepartmentAgreement;
 use App\Models\Isced;
@@ -14,6 +16,7 @@ use App\Models\WishAgreement;
 use App\Models\Arbitrage;
 use App\Models\University;
 use App\Models\PartnerCountry;
+use App\Models\Account;
 use Illuminate\Support\Facades\DB;
 use App\Exports\AgreementExport;
 use Maatwebsite\Excel\Facades\Excel;
@@ -41,7 +44,37 @@ class AgreementController extends Controller
             'count' => $agreements->count(),
         ]);
     }
+    public function agreementHome($acc_id)
+    {
+        $account = Account::with(['favoris.agreement', 'wishes'])->where('acc_id', $acc_id)->first();
     
+        if (!$account) {
+            return response()->json(['status' => 404, 'message' => 'Compte non trouvé.']);
+        }
+    
+        // Récupérer les IDs des favoris
+        $favorisIds = $account->favoris->pluck('agree_id')->toArray();
+    
+        // Récupérer les IDs des vœux
+        $voeuIds = collect([
+            $account->wishes->wsha_one ?? null,
+            $account->wishes->wsha_two ?? null,
+            $account->wishes->wsha_three ?? null,
+            $account->wishes->wsha_four ?? null,
+            $account->wishes->wsha_five ?? null,
+            $account->wishes->wsha_six ?? null,
+        ])->filter()->toArray();
+    
+        // Fusionner et retirer les doublons
+        $allIds = array_unique(array_merge($favorisIds, $voeuIds));
+    
+        // Charger tous les accords nécessaires
+        $agreements = Agreement::whereIn('agree_id', $allIds)->get();
+    
+        return response()->json([
+            'agreements' => AgreementResource::collection($agreements),
+        ]);
+    }
 
 public function random(Request $request)
 {

@@ -67,6 +67,10 @@ Route::get('/agreement', [AgreementController::class, 'index']);
 Route::get('/agreement/random', [AgreementController::class, 'random']);
 Route::get('/agreement/getbyid/{id}', [AgreementController::class, 'getById']);
 
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/agreement/home/{acc_id}', [AgreementController::class, 'agreementHome']);
+});
+
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::post('/agreement', [AgreementController::class, 'store']);
     Route::post('/agreementexp', [AgreementController::class, 'storeImport']);
