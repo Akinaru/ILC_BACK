@@ -25,10 +25,10 @@ class AdministrationController extends Controller
         return response()->json($admin);
     }
 
-    public function changeDateLimite(Request $request)
+    public function changeDateLimiteAutomne(Request $request)
     {
         $validatedData = $request->validate([
-            'adm_datelimite' => 'required|date',
+            'adm_datelimite_automne' => 'required|date',
         ]);
 
         $admin = Administration::find(1);
@@ -38,9 +38,26 @@ class AdministrationController extends Controller
             
         }
 
-        $admin->adm_datelimite = $validatedData['adm_datelimite'];
+        $admin->adm_datelimite_automne = $validatedData['adm_datelimite_automne'];
         $admin->save();
-        return response()->json(['status'=> 200 ,'message' => 'Date limite modifiée à '.$admin->adm_datelimite.'.']);
+        return response()->json(['status'=> 200 ,'message' => 'Date limite modifiée à '.$admin->adm_datelimite_automne.'.']);
+    }
+    public function changeDateLimitePrintemps(Request $request)
+    {
+        $validatedData = $request->validate([
+            'adm_datelimite_printemps' => 'required|date',
+        ]);
+
+        $admin = Administration::find(1);
+        if (!$admin) {
+            $admin = new Administration();
+            $admin->adm_id = 1;
+            
+        }
+
+        $admin->adm_datelimite_printemps = $validatedData['adm_datelimite_printemps'];
+        $admin->save();
+        return response()->json(['status'=> 200 ,'message' => 'Date limite modifiée à '.$admin->adm_datelimite_printemps.'.']);
     }
     
 

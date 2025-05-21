@@ -15,7 +15,8 @@ class AdministrationResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'adm_datelimite' => $this->resource->adm_datelimite,
+            'adm_datelimite_printemps' => $this->resource->adm_datelimite_printemps,
+            'adm_datelimite_automne' => $this->resource->adm_datelimite_automne,
             'adm_arbitragetemporaire' => $this->resource->adm_arbitragetemporaire,
         ];
     }

@@ -10,7 +10,7 @@ class Administration extends Model
     use HasFactory;
    protected $table = 't_e_administration_adm';
    protected $primaryKey = 'adm_id';
-   protected $fillable = ['adm_id', 'adm_datelimite', 'adm_arbitragetemporaire'];
+   protected $fillable = ['adm_id', 'adm_datelimite_printemps', 'adm_datelimite_automne', 'adm_arbitragetemporaire'];
    public $timestamps = false;
 
 }

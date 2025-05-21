@@ -8,6 +8,7 @@ use App\Http\Resources\AgreementResource;
 use App\Models\Account;
 use App\Models\Agreement;
 use App\Models\Article;
+use App\Models\Admininistration;
 
 class AccountResource extends JsonResource
 {
@@ -81,6 +82,16 @@ class AccountResource extends JsonResource
             ];
         }
 
+        $periode = $this->resource->acc_periodemobilite;
+        $admin = \App\Models\Administration::find(1);
+        $deadline = $admin
+            ? match ($periode) {
+                1 => $admin->adm_datelimite_automne,
+                2 => $admin->adm_datelimite_printemps,
+                default => $admin->adm_datelimite_automne,
+            }
+            : null;
+
         return [
             'acc_id' => $this->resource->acc_id,
             'acc_fullname' => $this->resource->acc_fullname,
@@ -100,6 +111,7 @@ class AccountResource extends JsonResource
             'department' => $this->resource->department,
             'access' => $accessResponse,
             'role' => $roleInfo,
+            'datelimite' => $deadline,
             'documents' => $docCount,
             'destination' => new AgreementResource($this->resource->destination),
             'arbitrage' => $this->resource->arbitrage 
