@@ -39,10 +39,13 @@ class EventThemeController extends Controller
 
             $validatedData = $request->validate([
                 'evthm_name' => 'required|string',
+                'evthm_color' => 'required|string',
+                
             ]);
     
             $them = new EventTheme();
             $them->evthm_name = $validatedData['evthm_name'];
+            $them->evthm_color = $validatedData['evthm_color'];
             $them->save();
 
     
@@ -61,11 +64,13 @@ class EventThemeController extends Controller
             $validatedData = $request->validate([
                 'evthm_id' => 'required|integer',
                 'evthm_name' => 'required|string',
+                'evthm_color' => 'required|string',
             ]);
             $id = $validatedData['evthm_id'];
 
             $thematique = EventTheme::find($id);
             $thematique->evthm_name = $validatedData['evthm_name'];
+            $thematique->evthm_color = $validatedData['evthm_color'];
             $thematique->save();
     
     
