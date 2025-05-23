@@ -34,6 +34,36 @@ class AcceptedAccountController extends Controller
         }
     }
 
+    public function getMyAccepted(Request $request)
+    {
+        try {
+            $user = auth()->user();
+    
+            if (!$user || !$user->acc_id) {
+                return response()->json([
+                    'status' => 404,
+                    'message' => 'Compte introuvable (utilisateur non connecté ou identifiant manquant).',
+                ]);
+            }
+    
+            $account = AcceptedAccount::where('acc_id', $user->acc_id)->first();
+    
+            if ($account) {
+                return response()->json(['account' => $account]);
+            } else {
+                return response()->json([
+                    'status' => 404,
+                    'message' => 'Aucun compte accepté trouvé.',
+                ]);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Une erreur s\'est produite.',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function store(Request $request)
     {
         try {

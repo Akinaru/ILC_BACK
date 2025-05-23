@@ -39,12 +39,13 @@ Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logo
 Route::get('/article', [ArticleController::class, 'index']);
 Route::get('/article/getbyid/{id}', [ArticleController::class, 'getById']);
 Route::get('/article/image/{id}', [ArticleController::class, 'getImageById']);
+Route::get('/article/unlinkdocuments/{id}', [ArticleController::class, 'unlinkDocuments']);
+
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::put('/article', [ArticleController::class, 'put']);
     Route::post('/article', [ArticleController::class, 'store']);
     Route::delete('/article/deletebyid/{id}', [ArticleController::class, 'deleteById']);
 });
-Route::get('/article/unlinkdocuments/{id}', [ArticleController::class, 'unlinkDocuments']);
 
 /** ================================================================================================ */
 /** Routes action */
@@ -68,7 +69,7 @@ Route::get('/agreement/random', [AgreementController::class, 'random']);
 Route::get('/agreement/getbyid/{id}', [AgreementController::class, 'getById']);
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/agreement/home/{acc_id}', [AgreementController::class, 'agreementHome']);
+    Route::get('/agreement/home', [AgreementController::class, 'agreementHome']);
 });
 
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
@@ -156,15 +157,11 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
 /** ================================================================================================ */
 /** Routes access */
 /** ================================================================================================ */
-Route::get('/access/getrole/{login}', [AccessController::class, 'getRole']);
 Route::get('/access/getbylogin/{login}', [AccessController::class, 'getByLogin']);
 
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/access', [AccessController::class, 'index']);
-    Route::get('/access/filtered', [AccessController::class, 'getFiltered']);
-});
-
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+    Route::get('/access/filtered', [AccessController::class, 'getFiltered']);
+    Route::get('/access', [AccessController::class, 'index']);
     Route::post('/access', [AccessController::class, 'store']);
     Route::delete('/access/delete', [AccessController::class, 'delete']);
 });
@@ -207,11 +204,15 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
 /** Routes favoris */
 /** ================================================================================================ */
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/favoris', [FavorisController::class, 'index']);
-    Route::get('/favoris/getbyid/{id}', [FavorisController::class, 'getById']);
-    Route::get('/favoris/getbylogin/{login}', [FavorisController::class, 'getByLogin']);
+    Route::get('/favoris/me', [FavorisController::class, 'getMyFavoris']);
     Route::post('/favoris', [FavorisController::class, 'store']);
-    Route::delete('/favoris/delete/{acc_id}/{agree_id}', [FavorisController::class, 'delete']);
+    Route::delete('/favoris/delete/{agree_id}', [FavorisController::class, 'delete']);
+});
+
+Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+    Route::get('/favoris/getbyid/{id}', [FavorisController::class, 'getById']);
+    Route::get('/favoris', [FavorisController::class, 'index']);
+    Route::get('/favoris/getbylogin/{login}', [FavorisController::class, 'getByLogin']);
 });
 
 /** ================================================================================================ */
@@ -221,6 +222,7 @@ Route::get('/event', [EventController::class, 'index']);
 Route::get('/event/pfonly', [EventController::class, 'presentFuturOnly']);
 Route::get('/event/getbyid/{id}', [EventController::class, 'getById']);
 Route::get('/event/gettitlebyid/{id}', [EventController::class, 'getTitleById']);
+
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::post('/event', [EventController::class, 'store']);
     Route::delete('/event/deletebyid/{id}', [EventController::class, 'deleteById']);
@@ -232,6 +234,9 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
 /** ================================================================================================ */
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/wishagreement', [WishAgreementController::class, 'save']);
+});
+
+Route::middleware(['auth:sanctum', 'role:chefdept'])->group(function () {
     Route::get('/wishagreement/getbylogin/{login}', [WishAgreementController::class, 'getByLogin']);
 });
 
@@ -261,18 +266,21 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
 /** ================================================================================================ */
 /** Routes acceptedaccount */
 /** ================================================================================================ */
-Route::middleware('auth:sanctum')->group(function () {
+Route::get('/acceptedaccount/getbylogin/{login}', [AcceptedAccountController::class, 'getAcceptedByLogin']);
+Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::get('/acceptedaccount', [AcceptedAccountController::class, 'index']);
     Route::post('/acceptedaccount', [AcceptedAccountController::class, 'store']);
     Route::post('/acceptedaccount/import', [AcceptedAccountController::class, 'storeImport']);
     Route::delete('/acceptedaccount', [AcceptedAccountController::class, 'delete']);
 });
-Route::get('/acceptedaccount/getbylogin/{login}', [AcceptedAccountController::class, 'getAcceptedByLogin']);
 
 /** ================================================================================================ */
 /** Routes arbitrage */
 /** ================================================================================================ */
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/arbitrage/me', [ArbitrageController::class, 'showMyArbitrage']);
+});
+Route::middleware(['auth:sanctum', 'role:chefdept'])->group(function () {
     Route::get('/arbitrage/getbyid/{acc_id}', [ArbitrageController::class, 'showByAccId']);
 });
 
@@ -289,7 +297,8 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
 /** Routes gestion images */
 /** ================================================================================================ */
 Route::get('/image', [ImageController::class, 'getImage']);
-Route::middleware('auth:sanctum')->group(function () {
+
+Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::post('/image/uploadarticle', [ImageController::class, 'uploadArticle']);
     Route::post('/image/upload', [ImageController::class, 'upload']);
     Route::delete('/image', [ImageController::class, 'delete']);
@@ -298,18 +307,22 @@ Route::middleware('auth:sanctum')->group(function () {
 /** ================================================================================================ */
 /** Routes gestion documents */
 /** ================================================================================================ */
-Route::post('/documents', [DocumentsController::class, 'upload']);
-Route::get('/documents/checkexist/{folder}/{filename}', [DocumentsController::class, 'checkFileExists']);
-Route::get('/documents/checkexistperso/{folder}/{filename}/{username}', [DocumentsController::class, 'checkFileExistsPerso']);
-Route::get('/documents/delete/{folder}/{filename}', [DocumentsController::class, 'delete']);
-Route::get('/documents/deleteperso/{folder}/{filename}', [DocumentsController::class, 'deletePerso']);
-Route::get('/documents/get/{folder}/{filename}', [DocumentsController::class, 'getDocument']);
-Route::get('/documents/getperso/etu/{folder}/{filename}', [DocumentsController::class, 'getMyDocument']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/documents', [DocumentsController::class, 'upload']);
+    Route::get('/documents/checkexist/{folder}/{filename}', [DocumentsController::class, 'checkFileExists']);
+    Route::get('/documents/checkexistperso/{folder}/{filename}', [DocumentsController::class, 'checkFileExistsPerso']);
+    Route::get('/documents/delete/{folder}/{filename}', [DocumentsController::class, 'delete']);
+    Route::get('/documents/deleteperso/{folder}/{filename}', [DocumentsController::class, 'deletePerso']);
+    Route::get('/documents/get/{folder}/{filename}', [DocumentsController::class, 'getDocument']);
+    Route::get('/documents/getperso/etu/{folder}/{filename}', [DocumentsController::class, 'getMyDocument']);
+});
 
 /** ================================================================================================ */
 /** Routes gestion documents pour articles */
 /** ================================================================================================ */
-Route::post('/documents/article', [DocumentsController::class, 'uploadDocumentArticle']);
+Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+    Route::post('/documents/article', [DocumentsController::class, 'uploadDocumentArticle']);
+});
 Route::get('/documents/article', [DocumentsController::class, 'getAllDocumentsForArticle']);
 Route::get('/documents/article/{idarticle}', [DocumentsController::class, 'getDocumentArticle']);
 Route::get('/documents/article/get/{filename}', [DocumentsController::class, 'downloadDocumentArticle']);

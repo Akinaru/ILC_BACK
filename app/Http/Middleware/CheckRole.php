@@ -15,15 +15,24 @@ class CheckRole
      */
     public function handle($request, Closure $next, $role)
     {
-        if (!auth()->user()->hasRole($role)) {
-            $message = match($role) {
+        $user = auth()->user();
+    
+        // Autoriser les admins à tout
+        if ($user->hasRole('admin')) {
+            return $next($request);
+        }
+    
+        // Vérifie le rôle exact sinon
+        if (!$user->hasRole($role)) {
+            $message = match ($role) {
                 'admin' => 'Accès refusé. Vous devez être connecté et administrateur pour effectuer cette action.',
                 'chefdept' => 'Accès refusé. Vous devez être au moins chef de département pour effectuer cette action.',
-                default => 'Accès refusé. Vous n\'avez pas les permissions nécessaires.'
+                default => 'Accès refusé. Vous n\'avez pas les permissions nécessaires.',
             };
-            
+    
             return response()->json(['status' => 401, 'message' => $message], 401);
         }
+    
         return $next($request);
     }
 }

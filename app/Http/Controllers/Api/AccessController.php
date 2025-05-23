@@ -55,6 +55,33 @@ class AccessController extends Controller
         }
     }
 
+    public function getMyAccess(Request $request)
+    {
+        $user = auth()->user();
+    
+        if (!$user || !$user->acc_id) {
+            return response()->json([
+                'status' => 404,
+                'message' => 'Compte introuvable (utilisateur non connecté ou identifiant manquant).',
+            ]);
+        }
+    
+        $access = Access::where('acc_id', $user->acc_id)->first();
+    
+        if ($access) {
+            return response()->json([
+                'access' => new AccessResource($access),
+                'count' => 1,
+            ]);
+        } else {
+            return response()->json([
+                'status' => 404,
+                'message' => 'Aucun accès trouvé pour ce compte.',
+                'count' => 0,
+            ]);
+        }
+    }
+
     public function store(Request $request)
     {
         try {
@@ -115,56 +142,6 @@ class AccessController extends Controller
         $access->delete();
     
         return response()->json(['status' => 202, 'message' => 'L\'accès de '.$acc_id.' a été supprimé avec succès.']);
-    }
-
-    public function getRole($login)
-    {
-        // Fetch the Access record based on the provided login (acc_id)
-        $access = Access::where('acc_id', $login)->first();
-    
-        if ($access) {
-            // If Access record exists, determine the role based on acs_accounttype
-            switch ($access->acs_accounttype) {
-                case 1:
-                    $role = "👑 ILC";
-                    $color = '#dc2626'; // No department color for Admin
-                    break;
-                case 2:
-                    $account = $access->account; // Fetch the related account
-                    $deptName = $account && $account->department ? $account->department->dept_shortname : null;
-                    $deptColor = $account && $account->department ? $account->department->dept_color : 'bg-red-500';
-                    $role = "⭐ " . ($deptName ? $deptName : "");
-                    $color = $deptColor;
-                    break;
-                default:
-                    $role = "Unknown";
-                    $color = '#aaaaaa'; // Default color
-                    break;
-            }
-    
-            return response()->json([
-                'role' => $role,
-                'access_type' => $access->acs_accounttype,
-                'color' => $color,
-            ]);
-        } else {
-            // If no Access record, check if there's a related Account record
-            $account = Account::where('acc_id', $login)->first();
-    
-            if ($account && $account->department) {
-                return response()->json([
-                    'role' => $account->department->dept_shortname,
-                    'access_type' => null,
-                    'color' => $account->department->dept_color,
-                ]);
-            } else {
-                return response()->json([
-                    'role' => "Aucun",
-                    'access_type' => null,
-                    'color' => "#aaaaaa",
-                ]);
-            }
-        }
     }
     
 

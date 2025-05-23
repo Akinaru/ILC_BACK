@@ -37,8 +37,16 @@ class WishAgreementController extends Controller
     public function save(Request $request)
     {
         try {
+            $user = auth()->user();
+    
+            if (!$user || !$user->acc_id) {
+                return response()->json([
+                    'status' => 403,
+                    'message' => 'Utilisateur non authentifié ou identifiant manquant.',
+                ]);
+            }
+    
             $validatedData = $request->validate([
-                'acc_id' => 'required|string',
                 'wsha_one' => 'integer|nullable',
                 'wsha_two' => 'integer|nullable',
                 'wsha_three' => 'integer|nullable',
@@ -47,38 +55,45 @@ class WishAgreementController extends Controller
                 'wsha_six' => 'integer|nullable',
             ]);
     
-            $acc_id = $validatedData['acc_id'];
+            $acc_id = $user->acc_id;
+    
             $wish = WishAgreement::find($acc_id);
     
             if (!$wish) {
-                $newWish = new WishAgreement();
-                $newWish->acc_id = $acc_id;
-                $newWish->wsha_one = $validatedData['wsha_one'];
-                $newWish->wsha_two = $validatedData['wsha_two'];
-                $newWish->wsha_three = $validatedData['wsha_three'];
-                $newWish->wsha_four = $validatedData['wsha_four'];
-                $newWish->wsha_five = $validatedData['wsha_five'];
-                $newWish->wsha_six = $validatedData['wsha_six'];
-                $newWish->save();
+                $wish = new WishAgreement();
+                $wish->acc_id = $acc_id;
+            }
+    
+            $wish->wsha_one = $validatedData['wsha_one'];
+            $wish->wsha_two = $validatedData['wsha_two'];
+            $wish->wsha_three = $validatedData['wsha_three'];
+            $wish->wsha_four = $validatedData['wsha_four'];
+            $wish->wsha_five = $validatedData['wsha_five'];
+            $wish->wsha_six = $validatedData['wsha_six'];
+    
+            // Vérifie si tous les champs sont vides => suppression
+            if (
+                !$wish->wsha_one &&
+                !$wish->wsha_two &&
+                !$wish->wsha_three &&
+                !$wish->wsha_four &&
+                !$wish->wsha_five &&
+                !$wish->wsha_six
+            ) {
+                $wish->delete();
             } else {
-                $wish->wsha_one = $validatedData['wsha_one'];
-                $wish->wsha_two = $validatedData['wsha_two'];
-                $wish->wsha_three = $validatedData['wsha_three'];
-                $wish->wsha_four = $validatedData['wsha_four'];
-                $wish->wsha_five = $validatedData['wsha_five'];
-                $wish->wsha_six = $validatedData['wsha_six'];
                 $wish->save();
             }
     
-            if ($wish && !$wish->wsha_one && !$wish->wsha_two && !$wish->wsha_three && !$wish->wsha_four && !$wish->wsha_five && !$wish->wsha_six) {
-                $wish->delete();
-            }
-    
-            return response()->json(['status' => 201, 'save' => 'Sauvegarde automatique', 'message' => 'Vos voeux ont été sauvegardés avec succès.']);
+            return response()->json([
+                'status' => 201,
+                'save' => 'Sauvegarde automatique',
+                'message' => 'Vos vœux ont été sauvegardés avec succès.',
+            ]);
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Une erreur s\'est produite lors de la sauvegarde des voeux.',
-                'message' => $e->getMessage()
+                'error' => 'Une erreur s\'est produite lors de la sauvegarde des vœux.',
+                'message' => $e->getMessage(),
             ], 500);
         }
     }

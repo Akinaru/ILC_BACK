@@ -44,13 +44,9 @@ class AgreementController extends Controller
             'count' => $agreements->count(),
         ]);
     }
-    public function agreementHome($acc_id)
+    public function agreementHome()
     {
-        $account = Account::with(['favoris.agreement', 'wishes'])->where('acc_id', $acc_id)->first();
-    
-        if (!$account) {
-            return response()->json(['status' => 404, 'message' => 'Compte non trouvé.']);
-        }
+        $account = auth()->user()->load(['favoris.agreement', 'wishes']);
     
         // Récupérer les IDs des favoris
         $favorisIds = $account->favoris->pluck('agree_id')->toArray();

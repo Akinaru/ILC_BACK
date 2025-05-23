@@ -8,6 +8,7 @@ use App\Http\Resources\AgreementResource;
 use App\Models\Account;
 use App\Models\Agreement;
 use App\Models\Article;
+use App\Models\Event;
 use App\Models\Admininistration;
 
 class AccountResource extends JsonResource
@@ -74,11 +75,13 @@ class AccountResource extends JsonResource
 
             $agreementsCount = Agreement::count();
             $articlesCount = Article::count();
+            $evenementsCount = Event::count();
 
             $adminMetrics = [
                 'students' => $studentsCount,
                 'agreements' => $agreementsCount,
                 'articles' => $articlesCount,
+                'evenements' => $evenementsCount,
             ];
         }
 

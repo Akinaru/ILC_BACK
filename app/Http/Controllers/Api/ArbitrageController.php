@@ -57,6 +57,29 @@ class ArbitrageController extends Controller
 
         return response()->json(['status' => 404, 'message' => 'Arbitrage introuvable']);
     }
+
+    public function showMyArbitrage(Request $request)
+    {
+        $user = auth()->user();
+
+        if (!$user || !$user->acc_id) {
+            return response()->json([
+                'status' => 403,
+                'message' => 'Utilisateur non authentifié ou identifiant manquant.',
+            ]);
+        }
+
+        $arbitrage = Arbitrage::where('acc_id', $user->acc_id)->first();
+
+        if ($arbitrage) {
+            return new ArbitrageResource($arbitrage);
+        }
+
+        return response()->json([
+            'status' => 404,
+            'message' => 'Arbitrage introuvable.',
+        ]);
+    }
     
     public function modifArbitrage(Request $request){
         $validated = $request->validate([
