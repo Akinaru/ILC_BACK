@@ -41,6 +41,12 @@ class Account extends Authenticatable
         'agree_id'
     ];
 
+    public function favoris()
+{
+    return $this->hasMany(Favoris::class, 'acc_id', 'acc_id');
+}
+
+
     public function department()
     {
         return $this->hasOne(Department::class, 'dept_id', 'dept_id');

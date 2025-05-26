@@ -42,6 +42,21 @@ class AccountController extends Controller
         ]);
     }
 
+    public function studentsActuel()
+    {
+        $accountsWithoutAccess = Account::where('acc_arbitragefait', false)
+            ->doesntHave('access')
+            ->orderBy('acc_fullname')
+            ->get();
+    
+        $accountCollection = AccountResource::collection($accountsWithoutAccess)->all();
+    
+        return response()->json([
+            'accounts' => $accountCollection,
+            'count' => $accountsWithoutAccess->count(),
+        ]);
+    }
+
     public function getByLogin($login)
     {
         try {
@@ -134,7 +149,6 @@ class AccountController extends Controller
                 'status' => 200,
                 'message' => 'Témoignage modifié avec succès !',
                 'account' => $account,
-                'merde' => $validatedData['acc_temoignage']
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -143,6 +157,40 @@ class AccountController extends Controller
             ], 500);
         }
     }
+
+    public function supprimerTemoignage(Request $request)
+{
+    try {
+        $validatedData = $request->validate([
+            'acc_id' => 'required|string',
+        ]);
+
+        // Trouver le compte
+        $account = Account::find($validatedData['acc_id']);
+
+        if (!$account) {
+            return response()->json([
+                'status' => 404,
+                'message' => 'Compte non trouvé',
+            ]);
+        }
+
+        // Suppression du témoignage
+        $account->acc_temoignage = null;
+        $account->save();
+
+        return response()->json([
+            'status' => 200,
+            'message' => 'Témoignage supprimé avec succès.',
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Une erreur s\'est produite lors de la suppression du témoignage.',
+            'message' => $e->getMessage()
+        ], 500);
+    }
+}
+
 
     public function validateChoixCours($id)
     {
@@ -170,7 +218,7 @@ class AccountController extends Controller
         // Valider les données de la requête
         $validatedData = $request->validate([
             'acc_id' => 'required|string',
-            'acc_studentnum' => 'required|integer',
+            'acc_studentnum' => 'required|string',
             'acc_parcours' => 'nullable|string',
             'acc_mail' => 'string',
         ]);
@@ -198,7 +246,7 @@ class AccountController extends Controller
         // Valider les données de la requête
         $validatedData = $request->validate([
             'acc_id' => 'required|string',
-            'acc_studentnum' => 'required|integer',
+            'acc_studentnum' => 'required|string',
             'acc_anneemobilite' => 'nullable|string',
             'acc_periodemobilite' => 'nullable|integer',
             'dept_id' => 'nullable|integer',

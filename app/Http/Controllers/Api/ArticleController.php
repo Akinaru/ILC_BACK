@@ -160,13 +160,21 @@ class ArticleController extends Controller
         $article = Article::find($id);
 
         if (!$article) {
-            return response()->json(['error' => 'Article introuvable.'], 404);
+            return response()->json([
+                'status' => '404',
+                'error' => 'Article non trouvé.',
+                'message' => 'L\'article demandé n\'existe pas.'
+            ]);
         }
 
         $imagePath = $article->art_image;
 
         if (!Storage::disk('local')->exists($imagePath)) {
-            return response()->json(['error' => 'Image introuvable.'], 404);
+            return response()->json([
+                'status' => '404',
+                'error' => 'Image non trouvée.',
+                'message' => 'L\'image demandée n\'existe pas.'
+            ]);
         }
 
         return response()->file(storage_path('app/'.$imagePath));

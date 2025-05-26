@@ -17,6 +17,7 @@ class EventThemeResource extends JsonResource
         return [
             'evthm_id' => $this->resource->evthm_id,
             'evthm_name' => $this->resource->evthm_name,
+            'evthm_color' => $this->resource->evthm_color,
         ];
     }
 }

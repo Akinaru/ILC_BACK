@@ -14,6 +14,15 @@ class ArbitrageController extends Controller
         return ArbitrageResource::collection(Arbitrage::all())->all();
     }
 
+    public function indexActuel()
+    {
+        $arbitrages = Arbitrage::whereHas('account', function ($query) {
+            $query->where('acc_arbitragefait', false);
+        })->get();
+    
+        return ArbitrageResource::collection($arbitrages)->all();
+    }
+
     public function saveArbitrage(Request $request)
     {
         // Validation des données d'entrée
@@ -48,6 +57,29 @@ class ArbitrageController extends Controller
 
         return response()->json(['status' => 404, 'message' => 'Arbitrage introuvable']);
     }
+
+    public function showMyArbitrage(Request $request)
+    {
+        $user = auth()->user();
+
+        if (!$user || !$user->acc_id) {
+            return response()->json([
+                'status' => 403,
+                'message' => 'Utilisateur non authentifié ou identifiant manquant.',
+            ]);
+        }
+
+        $arbitrage = Arbitrage::where('acc_id', $user->acc_id)->first();
+
+        if ($arbitrage) {
+            return new ArbitrageResource($arbitrage);
+        }
+
+        return response()->json([
+            'status' => 404,
+            'message' => 'Arbitrage introuvable.',
+        ]);
+    }
     
     public function modifArbitrage(Request $request){
         $validated = $request->validate([
@@ -75,7 +107,6 @@ class ArbitrageController extends Controller
         
         foreach ($arbitrages as $arbitrage) {
             // Vérifier si l'acc_id est "abelar" (vérification temporaire)
-            if ($arbitrage->acc_id === "abelar" || $arbitrage->acc_id === "boucelis") {
                 // Récupérer tous les comptes qui ont le même acc_id que l'arbitrage
                 $accounts = Account::where('acc_id', $arbitrage->acc_id)->get();
                 
@@ -88,9 +119,44 @@ class ArbitrageController extends Controller
                 
                 // Supprimer l'arbitrage après avoir mis à jour les comptes
                 $arbitrage->delete();
-            }
         }
         
         return response()->json(['message' => 'Arbitrages archivés avec succès', 'status' => 200]);
     }
+
+    public function desarchiver(Request $request)
+    {
+        try {
+            $validatedData = $request->validate([
+                'acc_id' => 'required|string',
+            ]);
+
+            // Trouver le compte
+            $account = Account::find($validatedData['acc_id']);
+
+            if (!$account) {
+                return response()->json([
+                    'status' => 404,
+                    'message' => 'Compte non trouvé',
+                ]);
+            }
+
+            // Mise à jour : retirer l'archivage
+            $account->acc_arbitragefait = false;
+            $account->save();
+
+            return response()->json([
+                'status' => 200,
+                'message' => 'Compte désarchivé avec succès.',
+                'account' => $account,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 500,
+                'error' => 'Une erreur s\'est produite lors du désarchivage.',
+                'message' => $e->getMessage(),
+            ]);
+        }
+    }
+
 }

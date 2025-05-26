@@ -99,35 +99,42 @@ class DocumentsController extends Controller
         ]);
     }
 
-    public function checkFileExistsPerso($folder, $filename, $login)
+    public function checkFileExistsPerso($folder, $filename)
     {
+        $user = auth()->user();
+    
+        if (!$user || !$user->acc_id) {
+            return response()->json([
+                'status' => 403,
+                'message' => 'Utilisateur non authentifié ou identifiant manquant.',
+            ]);
+        }
+    
+        $login = $user->acc_id;
+    
         // Construire le chemin complet du répertoire
         $directoryPath = 'documents/' . $folder;
-
+    
         // Récupérer tous les fichiers dans le répertoire
         $files = Storage::disk('private')->allFiles($directoryPath);
-
+    
         // Construire le nom de fichier à vérifier
         $fullFilename = "{$filename}_{$login}";
-
+    
         // Parcourir les fichiers pour trouver celui qui correspond au nom donné
         foreach ($files as $file) {
-            // Extraire le nom du fichier sans l'extension
             $fileWithoutExtension = pathinfo($file, PATHINFO_FILENAME);
-
-            // Vérifier si le nom du fichier correspond au nom complet
+    
             if ($fileWithoutExtension === $fullFilename) {
-                // Le fichier a été trouvé, retourner son chemin complet avec l'extension
                 return response()->json([
                     'status' => 200,
                     'exists' => true,
                     'message' => 'Le fichier existe.',
-                    'path' => $file, // Inclut l'extension
+                    'path' => $file,
                 ]);
             }
         }
-
-        // Aucun fichier correspondant n'a été trouvé
+    
         return response()->json([
             'status' => 404,
             'exists' => false,

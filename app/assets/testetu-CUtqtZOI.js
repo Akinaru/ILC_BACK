@@ -1,1 +1,0 @@
-import{_ as e,d as t,e as s,g as o}from"./index-B86mjc3y.js";const c={},n=o("p",null,"Login test etu",-1),_=[n];function r(a,d){return t(),s("div",null,_)}const i=e(c,[["render",r]]);export{i as default};

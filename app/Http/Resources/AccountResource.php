@@ -4,6 +4,12 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Http\Resources\AgreementResource;
+use App\Models\Account;
+use App\Models\Agreement;
+use App\Models\Article;
+use App\Models\Event;
+use App\Models\Admininistration;
 
 class AccountResource extends JsonResource
 {
@@ -15,13 +21,12 @@ class AccountResource extends JsonResource
     public function toArray(Request $request): array
     {
         $wishes = $this->resource->wishes;
-    
+
         // Initialiser le tableau des souhaits et le nombre de souhaits non nuls à 0
         $wishesArray = [];
         $wishCount = 0;
-    
+
         if ($wishes) {
-            // Compter le nombre de vœux non nuls
             $wishCount = collect([
                 $wishes->wsha_one,
                 $wishes->wsha_two,
@@ -32,14 +37,12 @@ class AccountResource extends JsonResource
             ])->filter(function ($wish) {
                 return !is_null($wish);
             })->count();
-    
-            // Convertir l'objet wishes en tableau
+
             $wishesArray = $wishes->toArray();
         }
-    
-        // Ajouter le champ 'count' au tableau des souhaits
+
         $wishesArray['count'] = $wishCount;
-    
+
         $roleInfo = $this->getRoleInfo();
         $docCount = $this->getFileCount();
 
@@ -54,6 +57,43 @@ class AccountResource extends JsonResource
                 'count' => 0,
             ];
         }
+
+        // Favoris
+        $favoris = $this->resource->favoris;
+        $favorisData = [
+            'count' => $favoris->count(),
+            'items' => \App\Http\Resources\FavorisResource::collection($favoris),
+        ];
+
+        // Métriques si accès de niveau 1
+        $adminMetrics = null;
+        if ($this->resource->hasRole('admin')) {
+            $studentsCount = Account::whereDoesntHave('access')
+                ->where('acc_arbitragefait', false)
+                ->where('acc_validateacc', true)
+                ->count();
+
+            $agreementsCount = Agreement::count();
+            $articlesCount = Article::count();
+            $evenementsCount = Event::count();
+
+            $adminMetrics = [
+                'students' => $studentsCount,
+                'agreements' => $agreementsCount,
+                'articles' => $articlesCount,
+                'evenements' => $evenementsCount,
+            ];
+        }
+
+        $periode = $this->resource->acc_periodemobilite;
+        $admin = \App\Models\Administration::find(1);
+        $deadline = $admin
+            ? match ($periode) {
+                1 => $admin->adm_datelimite_automne,
+                2 => $admin->adm_datelimite_printemps,
+                default => $admin->adm_datelimite_automne,
+            }
+            : null;
 
         return [
             'acc_id' => $this->resource->acc_id,
@@ -74,6 +114,7 @@ class AccountResource extends JsonResource
             'department' => $this->resource->department,
             'access' => $accessResponse,
             'role' => $roleInfo,
+            'datelimite' => $deadline,
             'documents' => $docCount,
             'destination' => new AgreementResource($this->resource->destination),
             'arbitrage' => $this->resource->arbitrage 
@@ -83,9 +124,8 @@ class AccountResource extends JsonResource
                 ] 
                 : null,
             'wishes' => $wishesArray,
+            'favoris' => $favorisData,
+            'metrics' => $adminMetrics,
         ];
     }
-    
-    
-    
 }

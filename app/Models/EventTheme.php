@@ -16,5 +16,6 @@ class EventTheme extends Model
     protected $fillable = [
         'evthm_id',
         'evthm_name',
+        'evthm_color',
     ];
 }

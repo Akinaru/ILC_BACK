@@ -28,17 +28,60 @@ class ActionController extends Controller
         return ActionResource::collection($actions);
     }
 
-    public function paginateActions($perPage = 25) // Changé de 10 à 25
+    public function getFiveByLogin($login)
+    {
+        $actions = Action::where('acc_id', $login)
+            ->orderBy('act_date', 'desc')
+            ->limit(5)
+            ->get();
+    
+        return ActionResource::collection($actions);
+    }
+    
+
+    public function paginateActions(Request $request)
     {
         try {
-            $perPage = min(max((int)$perPage, 1), 100);
-            
-            $actions = Action::orderBy('act_date', 'desc')
-                ->paginate($perPage);
-                
+            $perPage = min(max((int) $request->get('per_page', 25), 1), 100);
+    
+            $query = Action::query()
+                ->with('account') // Charge la relation pour récupérer le fullname
+                ->orderBy('act_date', 'desc');
+    
+            // Filtre : types d'actions
+            if ($request->has('types') && is_array($request->types)) {
+                $query->whereIn('act_type', $request->types);
+            }
+    
+            // Recherche acc_id OU account.acc_fullname
+            if ($request->filled('search')) {
+                $search = strtolower($request->get('search'));
+    
+                $query->where(function ($q) use ($search) {
+                    $q->whereRaw('LOWER(acc_id) LIKE ?', ["%$search%"])
+                      ->orWhereHas('account', function ($sub) use ($search) {
+                          $sub->whereRaw('LOWER(acc_fullname) LIKE ?', ["%$search%"]);
+                      });
+                });
+            }
+    
+            $actions = $query->paginate($perPage);
+    
+            // On formate les actions avec le champ acc_fullname
+            $data = $actions->getCollection()->map(function ($action) {
+                return [
+                    'act_id' => $action->act_id,
+                    'acc_id' => $action->acc_id,
+                    'acc_fullname' => $action->account->acc_fullname ?? null,
+                    'act_description' => $action->act_description,
+                    'act_date' => $action->act_date,
+                    'act_type' => $action->act_type,
+                ];
+            });
+    
             return response()->json([
                 'status' => 200,
-                'data' => $actions->items(),
+                'data' => $data,
                 'pagination' => [
                     'current_page' => $actions->currentPage(),
                     'per_page' => $actions->perPage(),
