@@ -38,7 +38,10 @@ class Account extends Authenticatable
         'acc_periodemobilite',
         'acc_temoignage',
         'acc_arbitragefait',
-        'agree_id'
+        'acc_ancienetu',
+        'agree_id',
+        'acc_json_department',
+        'acc_json_agreement'
     ];
 
     public function favoris()

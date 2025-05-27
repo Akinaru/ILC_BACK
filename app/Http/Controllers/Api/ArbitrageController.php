@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Http\Resources\ArbitrageResource;
 use App\Models\Arbitrage;
 use App\Models\Account;
+use App\Models\Agreement;
+use App\Http\Resources\AgreementResource;
 
 class ArbitrageController extends Controller
 {
@@ -17,7 +19,7 @@ class ArbitrageController extends Controller
     public function indexActuel()
     {
         $arbitrages = Arbitrage::whereHas('account', function ($query) {
-            $query->where('acc_arbitragefait', false);
+            $query->where('acc_ancienetu', false);
         })->get();
     
         return ArbitrageResource::collection($arbitrages)->all();
@@ -104,6 +106,42 @@ class ArbitrageController extends Controller
     {
         // Récupérer tous les arbitrages
         $arbitrages = Arbitrage::all();
+    
+        foreach ($arbitrages as $arbitrage) {
+            // Récupérer tous les comptes qui ont le même acc_id
+            $accounts = Account::where('acc_id', $arbitrage->acc_id)->get();
+    
+            foreach ($accounts as $account) {
+                // Récupérer le département via la relation
+                $department = $account->department;
+    
+                // Récupérer l'accord correspondant
+                $agreement = Agreement::where('agree_id', $arbitrage->agree_id)->first();
+    
+                // Mise à jour du compte
+                $account->acc_arbitragefait = true;
+                $account->acc_ancienetu = true;
+                $account->agree_id = $arbitrage->agree_id;
+                $account->acc_json_department = $department ? json_encode($department) : null;
+                $account->acc_json_agreement = $agreement ? json_encode(new AgreementResource($agreement)) : null;
+    
+                $account->save();
+            }
+    
+            // Supprimer l'arbitrage après avoir mis à jour les comptes
+            $arbitrage->delete();
+        }
+    
+        return response()->json([
+            'message' => 'Arbitrages archivés avec succès',
+            'status' => 200
+        ]);
+    }
+
+    public function validerArbitrage(Request $request)
+    {
+        // Récupérer tous les arbitrages
+        $arbitrages = Arbitrage::all();
         
         foreach ($arbitrages as $arbitrage) {
             // Vérifier si l'acc_id est "abelar" (vérification temporaire)
@@ -113,15 +151,12 @@ class ArbitrageController extends Controller
                 foreach ($accounts as $account) {
                     // Mettre à jour le compte
                     $account->acc_arbitragefait = true;
-                    $account->agree_id = $arbitrage->agree_id;
                     $account->save();
                 }
                 
-                // Supprimer l'arbitrage après avoir mis à jour les comptes
-                $arbitrage->delete();
         }
         
-        return response()->json(['message' => 'Arbitrages archivés avec succès', 'status' => 200]);
+        return response()->json(['message' => 'Arbitrages validé avec succès', 'status' => 200]);
     }
 
     public function desarchiver(Request $request)
@@ -143,6 +178,10 @@ class ArbitrageController extends Controller
 
             // Mise à jour : retirer l'archivage
             $account->acc_arbitragefait = false;
+            $account->acc_ancienetu = false;
+            $account->agree_id = null;
+            $account->acc_json_agreement = null;
+            $account->acc_json_department = null;
             $account->save();
 
             return response()->json([

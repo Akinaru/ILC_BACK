@@ -28,6 +28,17 @@ class AccountController extends Controller
         ]);
     }
 
+    public function indexActuel()
+    {
+        $accounts = Account::where('acc_ancienetu', 0)->get();
+        $accountCollection = AccountResource::collection($accounts)->all();
+
+        return response()->json([
+            'accounts' => $accountCollection,
+            'count' => $accounts->count(),
+        ]);
+    }
+
     public function students()
     {
         $accountsWithoutAccess = Account::doesntHave('access')
@@ -44,7 +55,7 @@ class AccountController extends Controller
 
     public function studentsActuel()
     {
-        $accountsWithoutAccess = Account::where('acc_arbitragefait', false)
+        $accountsWithoutAccess = Account::where('acc_ancienetu', false)
             ->doesntHave('access')
             ->orderBy('acc_fullname')
             ->get();
@@ -71,6 +82,21 @@ class AccountController extends Controller
     public function getByDept($dept_id)
     {
         $accounts = Account::where('dept_id', $dept_id)
+                           ->doesntHave('access')
+                           ->get();
+    
+        $accountCollection = AccountResource::collection($accounts)->all();
+    
+        return response()->json([
+            'accounts' => $accountCollection,
+            'count' => $accounts->count(),
+        ]);
+    }
+
+    public function getByDeptAncien($dept_id)
+    {
+        $accounts = Account::where('dept_id', $dept_id)
+                           ->where('acc_ancienetu', 1)
                            ->doesntHave('access')
                            ->get();
     
@@ -354,9 +380,9 @@ class AccountController extends Controller
         return response()->json(['status' => 202, 'message' => 'Le compte a été supprimé avec succès.']);
     }
        
-    public function login($id)
+    public function login($acc_id)
     {
-        $account = Account::find($id);
+        $account = Account::find($acc_id);
 
         if (!$account) {
             return response()->json(['status' => 404, 'message' => 'Compte non trouvé.']);
@@ -365,7 +391,7 @@ class AccountController extends Controller
         $account->acc_lastlogin = DB::raw('NOW()');
         $account->save();
 
-        $succes = Account::findOrFail($id);
+        $succes = Account::findOrFail($acc_id);
         return new AccountResource($succes);
     }
 
