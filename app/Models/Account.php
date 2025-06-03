@@ -41,7 +41,8 @@ class Account extends Authenticatable
         'acc_ancienetu',
         'agree_id',
         'acc_json_department',
-        'acc_json_agreement'
+        'acc_json_agreement',
+        'acc_tokenapplimsg'
     ];
 
     public function favoris()

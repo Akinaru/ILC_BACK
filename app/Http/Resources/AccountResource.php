@@ -129,6 +129,7 @@ class AccountResource extends JsonResource
             'wishes' => $wishesArray,
             'favoris' => $favorisData,
             'metrics' => $adminMetrics,
+            'acc_tokenapplimsg' => $this->resource->acc_tokenapplimsg,
         ];
     }
 }

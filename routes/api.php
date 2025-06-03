@@ -330,4 +330,8 @@ Route::get('/documents/article', [DocumentsController::class, 'getAllDocumentsFo
 Route::get('/documents/article/{idarticle}', [DocumentsController::class, 'getDocumentArticle']);
 Route::get('/documents/article/get/{filename}', [DocumentsController::class, 'downloadDocumentArticle']);
 
+/** ================================================================================================ */
+/** Routes pour l'application mobile */
+/** ================================================================================================ */
 Route::get('/mobileapp/exportdata', [MobileAppController::class, 'exportForMobileApp']);
+Route::get('/mobileapp/assignpwd', [MobileAppController::class, 'bulkAssignToken']);
