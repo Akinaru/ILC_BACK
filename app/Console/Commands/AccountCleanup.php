@@ -79,8 +79,10 @@ class AccountCleanup extends Command
         }
 
         $this->line("────────────── Résumé global ──────────────");
+        $this->line("📅 " . now('Europe/Paris')->format('Y-m-d H:i:s'));
         $this->line("✔ Anonymisés : {$anonymizedCount}");
         $this->line("🗑️ Supprimés : {$deletedCount}");
+        $this->line("────────────── Fin du résumé ──────────────");
 
         // Log fichier
         $logLine = now('Europe/Paris')->format('Y-m-d H:i:s') . " | Cleanup run: {$anonymizedCount} anonymised, {$deletedCount} deleted" . PHP_EOL;

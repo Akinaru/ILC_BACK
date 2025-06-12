@@ -13,9 +13,10 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->command('accounts:cleanup')
-        ->everyMinute()
+        ->monthly()
         ->sendOutputTo('/var/log/ilc_schedule_output.log')
         ->appendOutputTo('/var/log/ilc_schedule_output.log');
+    
     }
 
     /**
