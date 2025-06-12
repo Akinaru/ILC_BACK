@@ -121,6 +121,7 @@ class AccountController extends Controller
             $account = new Account();
             $account->acc_id = $validatedData['acc_id'];
             $account->acc_fullname = $validatedData['acc_fullname'];
+            
             // Création du token pour l'aplli de messagerie
             $account->acc_tokenapplimsg = Str::upper(Str::random(8));
 
