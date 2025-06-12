@@ -16,6 +16,7 @@ use App\Exports\AccountExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class AccountController extends Controller
 {
@@ -120,6 +121,9 @@ class AccountController extends Controller
             $account = new Account();
             $account->acc_id = $validatedData['acc_id'];
             $account->acc_fullname = $validatedData['acc_fullname'];
+            // Création du token pour l'aplli de messagerie
+            $account->acc_tokenapplimsg = Str::upper(Str::random(8));
+
             $account->save();
 
             

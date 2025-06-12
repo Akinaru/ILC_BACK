@@ -12,7 +12,10 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        $schedule->command('accounts:cleanup')
+        ->everyMinute()
+        ->sendOutputTo('/var/log/ilc_schedule_output.log')
+        ->appendOutputTo('/var/log/ilc_schedule_output.log');
     }
 
     /**

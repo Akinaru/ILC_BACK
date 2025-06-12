@@ -5,7 +5,9 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use App\Models\Account;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 class MobileAppController extends Controller
 {
@@ -36,7 +38,7 @@ class MobileAppController extends Controller
                     LEFT JOIN t_e_agreement_agree agree on wsha.wsha_six = agree.agree_id
                     LEFT JOIN t_e_university_univ univ on agree.univ_id = univ.univ_id
                     )
-            SELECT acc.acc_id, acc_fullname, acc_tokenapplimsg, 
+            SELECT acc.acc_id, acc_fullname, acc_mail, acc_tokenapplimsg, 
                 dept_shortname, acs_accounttype, 
                 acc_anneemobilite, acc_periodemobilite, 
                 univ_name, parco_name,
@@ -67,5 +69,28 @@ class MobileAppController extends Controller
 
         /* Pour vérifier l'intégrité des données envoyées */
         //return $view;
+    }
+
+    public function bulkAssignToken(){
+        try {
+            $accounts = Account::all();
+
+            foreach($accounts as $account){
+                if($account->acc_tokenapplimsg == null){
+                    $account->acc_tokenapplimsg = Str::upper(Str::random(8));
+                    $account->save();
+                }
+            }
+
+            return response()->json([
+                'message' => 'Mots de passe assignés'
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Erreur lors l\'attibution des mots de passe.',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 }
