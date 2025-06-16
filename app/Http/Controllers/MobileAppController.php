@@ -59,7 +59,7 @@ class MobileAppController extends Controller
         );
 
         $view = DB::table('view_accounts_with_info')->orderBy('acc_id')->get();
-        $response = Http::post('http://51.83.36.122:7473/api/account/store', [
+        $response = Http::post('http://51.83.36.122/ilc_flutter_back/ILC_FLUTTER_BACK/public/api/account/store', [
             'data' => $view,
         ]);
         return response()->json([
