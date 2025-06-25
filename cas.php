@@ -100,7 +100,6 @@ if (isset($_GET['admin']) && $_GET['admin'] === 'true') {
                         <span><?= htmlspecialchars($error) ?></span>
                     </div>
                 <?php endif; ?>
-                <?php var_dump($pass); ?>
                 <form method="POST">
                     <div class="form-control">
                         <label class="label">Nom d'utilisateur</label>
