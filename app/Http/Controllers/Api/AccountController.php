@@ -94,6 +94,21 @@ class AccountController extends Controller
         ]);
     }
 
+    public function getByDeptActuel($dept_id)
+    {
+        $accounts = Account::where('dept_id', $dept_id)
+                        ->where('acc_ancienetu', 0)
+                        ->doesntHave('access')
+                        ->get();
+
+        $accountCollection = AccountResource::collection($accounts)->all();
+
+        return response()->json([
+            'accounts' => $accountCollection,
+            'count' => $accounts->count(),
+        ]);
+    }
+
     public function getByDeptAncien($dept_id)
     {
         $accounts = Account::where('dept_id', $dept_id)
