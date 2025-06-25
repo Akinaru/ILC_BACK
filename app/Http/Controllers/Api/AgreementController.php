@@ -20,6 +20,7 @@ use App\Models\Account;
 use Illuminate\Support\Facades\DB;
 use App\Exports\AgreementExport;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 
 class AgreementController extends Controller
@@ -44,6 +45,63 @@ class AgreementController extends Controller
             'count' => $agreements->count(),
         ]);
     }
+
+
+
+    public function indexFiltered(Request $request)
+    {
+        $departments = (array) $request->query('departments', []);
+        $countries = (array) $request->query('countries', []);
+        $page = max(1, (int) $request->query('page', 1));
+        $perPage = max(1, (int) $request->query('perPage', 20));
+
+        // Requête de base
+        $query = Agreement::query();
+
+        // 🔹 Filtre départements (many-to-many)
+        if (!empty($departments)) {
+            $query->whereHas('departments', function ($q) use ($departments) {
+                $q->whereIn('dept_shortname', $departments);
+            });
+        }
+
+        // 🔹 Filtre pays partenaires via university -> partnercountry -> parco_name
+        if (!empty($countries)) {
+            $query->whereHas('university.partnercountry', function ($q) use ($countries) {
+                $q->whereIn('parco_name', $countries);
+            });
+        }
+
+        // Tri par nom de pays partenaire (null safe)
+        $query->with(['university.partnercountry'])->get(); // Eager load
+        $agreements = $query->get()->sortBy(function ($agreement) {
+            return optional($agreement->university->partnercountry)->parco_name ?? '';
+        })->values();
+
+        // Pagination manuelle
+        $total = $agreements->count();
+        $results = $agreements->slice(($page - 1) * $perPage, $perPage)->values();
+
+        $paginated = new LengthAwarePaginator(
+            $results,
+            $total,
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        // Ressources
+        $agreementCollection = AgreementResource::collection($paginated->items());
+
+        return response()->json([
+            'agreements' => $agreementCollection,
+            'count' => $paginated->total(),
+            'current_page' => $paginated->currentPage(),
+            'per_page' => $paginated->perPage(),
+            'last_page' => $paginated->lastPage(),
+        ]);
+    }
+    
     public function agreementHome()
     {
         $account = auth()->user()->load(['favoris.agreement', 'wishes']);

@@ -65,6 +65,7 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
 /** Routes agreement */
 /** ================================================================================================ */
 Route::get('/agreement', [AgreementController::class, 'index']);
+Route::get('/agreement/filtered', [AgreementController::class, 'indexFiltered']);
 Route::get('/agreement/random', [AgreementController::class, 'random']);
 Route::get('/agreement/getbyid/{id}', [AgreementController::class, 'getById']);
 
@@ -176,6 +177,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/account', [AccountController::class, 'index']);
     Route::get('/account/actuel', [AccountController::class, 'indexActuel']);
     Route::get('/account/students', [AccountController::class, 'students']);
+    Route::get('/account/studentsFiltered', [AccountController::class, 'studentsFiltered']);
     Route::get('/account/students/actuel', [AccountController::class, 'studentsActuel']);
     Route::get('/account/getbydept/{dept_id}', [AccountController::class, 'getByDept']);
     Route::get('/account/actuel/getbydept/{dept_id}', [AccountController::class, 'getByDeptActuel']);

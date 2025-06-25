@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Resources\FavorisResource;
 use App\Http\Resources\AgreementResource;
 use App\Models\Favoris;
+use App\Models\Agreement;
 
 class FavorisController extends Controller
 {
@@ -24,11 +25,19 @@ class FavorisController extends Controller
     public function getByLogin($login)
     {
         $favoris = Favoris::where('acc_id', $login)->get();
-        $favorisCollection = FavorisResource::collection($favoris);
+
+        // Récupérer tous les agree_id des favoris
+        $agreeIds = $favoris->pluck('agree_id');
+
+        // Récupérer les accords correspondants
+        $agreements = Agreement::whereIn('agree_id', $agreeIds)->get();
+
+        // Transformer avec le resource
+        $agreementResources = AgreementResource::collection($agreements);
 
         return response()->json([
-            'favoris' => $favorisCollection,
-            'count' => $favorisCollection->count(),
+            'favoris' => $agreementResources,
+            'count' => $agreementResources->count(),
         ]);
     }
 

@@ -17,6 +17,8 @@ use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 class AccountController extends Controller
 {
@@ -54,6 +56,150 @@ class AccountController extends Controller
         ]);
     }
 
+
+    public function studentsFiltered(Request $request)
+    {
+        $departments = (array) $request->query('departments', []);
+        $voeux = (array) $request->query('voeux', []);
+        $annees = (array) $request->query('annees', []);
+        $periodes = (array) $request->query('periodes', []);
+        $documents = (array) $request->query('documents', []);
+        $destinations = (array) $request->query('destinations', []);
+        $autres = (array) $request->query('autres', []);
+        $searchQuery = $request->query('search', null);
+
+        $page = max(1, (int) $request->query('page', 1));
+        $perPage = max(1, (int) $request->query('perPage', 20));
+
+        // Requête de base
+        $query = Account::doesntHave('access');
+
+        if (!empty($departments)) {
+            $query->where(function ($q) use ($departments) {
+                foreach ($departments as $dept) {
+                    if ($dept === 'Aucun') {
+                        $q->orWhereNull('dept_id');
+                    } else {
+                        $deptLower = strtolower($dept);
+                        $q->orWhereHas('department', function ($q2) use ($deptLower) {
+                            $q2->whereRaw('LOWER(dept_shortname) = ?', [$deptLower]);
+                        });
+                    }
+                }
+            });
+        }
+
+        if (!empty($voeux)) {
+            $query->where(function ($q) use ($voeux) {
+                foreach ($voeux as $v) {
+                    if ($v === 'AuMoinsUn') {
+                        $q->orWhereHas('wishes');
+                    } elseif ($v === 'Aucun') {
+                        $q->orWhereDoesntHave('wishes');
+                    }
+                }
+            });
+        }
+
+        if ($searchQuery) {
+            $like = '%' . strtolower($searchQuery) . '%';
+            $query->where(function ($q) use ($like) {
+                $q->whereRaw('LOWER(acc_fullname) LIKE ?', [$like])
+                ->orWhereRaw('LOWER(acc_id) LIKE ?', [$like]);
+            });
+        }
+
+
+        if (!empty($annees)) {
+            $query->whereIn('acc_anneemobilite', $annees);
+        }
+
+        if (!empty($periodes)) {
+            $query->whereIn('acc_periodemobilite', $periodes);
+        }
+
+        if (!empty($destinations)) {
+            $query->where(function ($q) use ($destinations) {
+                foreach ($destinations as $dest) {
+                    if ($dest === 'null') {
+                        $q->orWhere(function ($subQ) {
+                            $subQ->whereDoesntHave('arbitrage')
+                                ->whereNull('acc_json_agreement');
+                        });
+                    } else {
+                        $q->orWhere(function ($subQ) use ($dest) {
+                            $subQ->whereHas('arbitrage', function ($q2) use ($dest) {
+                                $q2->where('agree_id', $dest);
+                            })->orWhereJsonContains('acc_json_agreement->agree_id', (int)$dest);
+                        });
+                    }
+                }
+            });
+        }
+
+        if (!empty($autres)) {
+            $query->where(function ($q) use ($autres) {
+                foreach ($autres as $val) {
+                    if ($val === 'archivetrue') {
+                        $q->orWhere('acc_ancienetu', true);
+                    } elseif ($val === 'archivefalse') {
+                        $q->orWhere('acc_ancienetu', false)->orWhereNull('acc_ancienetu');
+                    }
+                }
+            });
+        }
+
+        $query->orderBy('acc_fullname');
+
+        // Récupération de tous les comptes (non paginée)
+        $accounts = $query->get();
+
+        // Filtrage en PHP avec getFileCount
+        if (!empty($documents)) {
+            $accounts = $accounts->filter(function ($account) use ($documents) {
+                $fileCount = $account->getFileCount()['count'] ?? 0;
+
+                foreach ($documents as $doc) {
+                    if ($doc === 'ChoixCoursValide' && $account->acc_validechoixcours) {
+                        return true;
+                    }
+                    if (in_array($doc, ['0', '1', '2', '3'], true) && (string)$fileCount === $doc) {
+                        return true;
+                    }
+                }
+
+                return false;
+            })->values();
+        }
+
+
+        // Pagination manuelle
+        $total = $accounts->count();
+        $results = $accounts->slice(($page - 1) * $perPage, $perPage)->values();
+
+        $paginated = new LengthAwarePaginator(
+            $results,
+            $total,
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        $accountCollection = AccountResource::collection($paginated->items());
+
+        return response()->json([
+            'accounts' => $accountCollection,
+            'count' => $paginated->total(),
+            'current_page' => $paginated->currentPage(),
+            'per_page' => $paginated->perPage(),
+            'last_page' => $paginated->lastPage(),
+        ]);
+    }
+
+
+
+
+
     public function studentsActuel()
     {
         $accountsWithoutAccess = Account::where('acc_ancienetu', false)
@@ -88,6 +234,21 @@ class AccountController extends Controller
     
         $accountCollection = AccountResource::collection($accounts)->all();
     
+        return response()->json([
+            'accounts' => $accountCollection,
+            'count' => $accounts->count(),
+        ]);
+    }
+
+    public function getByDeptActuel($dept_id)
+    {
+        $accounts = Account::where('dept_id', $dept_id)
+                        ->where('acc_ancienetu', 0)
+                        ->doesntHave('access')
+                        ->get();
+
+        $accountCollection = AccountResource::collection($accounts)->all();
+
         return response()->json([
             'accounts' => $accountCollection,
             'count' => $accounts->count(),
@@ -437,11 +598,9 @@ class AccountController extends Controller
                 'acc_id' => 'required|string',
                 'acc_studentnum' => 'required|string',
                 'dept_id' => 'required|integer',
-                'acc_amenagement' => 'required|boolean',
                 'acc_anneemobilite' => 'required|string',
                 'acc_periodemobilite' => 'required|integer',
                 'acc_mail' => 'required|string',
-                'acc_amenagementdesc' => 'nullable|string',
                 'acc_parcours' => 'nullable|string',
                 'acc_consent' => 'required|boolean',
             ]);
@@ -458,10 +617,6 @@ class AccountController extends Controller
             $account->acc_anneemobilite = $validatedData['acc_anneemobilite'];
             $account->acc_periodemobilite = $validatedData['acc_periodemobilite'];
             $account->dept_id = $validatedData['dept_id'];
-            $account->acc_amenagement = $validatedData['acc_amenagement'];
-            if(isset($validatedData['acc_amenagementdesc'])){
-                $account->acc_amenagementdesc = $validatedData['acc_amenagementdesc'];
-            }
             if(isset($validatedData['acc_parcours'])){
                 $account->acc_parcours = $validatedData['acc_parcours'];
             }
