@@ -71,9 +71,12 @@ if (isset($_REQUEST['check_login'])) {
 // --- MODE ADMIN (bypass CAS) ---
 $redirectParam = isset($_REQUEST['redirect']) ? urldecode($_REQUEST['redirect']) : '';
 
+$isAdmin = (isset($_GET['admin']) && $_GET['admin'] === 'true');
+$containsIutAcy = strpos($redirectParam, 'iut-acy') !== false;
+
 if (
-    (isset($_GET['admin']) && $_GET['admin'] === 'true')
-    || strpos($redirectParam, 'iut.acy') === false
+    $isAdmin
+    || ! $containsIutAcy
 ) {
 
     // Traitement du formulaire
