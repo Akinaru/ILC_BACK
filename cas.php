@@ -55,8 +55,26 @@ function getBaseUrl() {
     return 'https://ilc.iut-acy.univ-smb.fr/#';
 }
 
+// Vérification de l'état de connexion
+if (isset($_REQUEST['check_login'])) {
+    $casLogged = phpCAS::isAuthenticated();
+    $casUser = $casLogged ? phpCAS::getUser() : null;
+
+    if (!$casLogged && isset($_SESSION['custom_user'])) {
+        echo json_encode(['logged_in' => true, 'login' => $_SESSION['custom_user']]);
+    } else {
+        echo json_encode(['logged_in' => $casLogged, 'login' => $casUser]);
+    }
+    exit();
+}
+
 // --- MODE ADMIN (bypass CAS) ---
-if (isset($_GET['admin']) && $_GET['admin'] === 'true') {
+$redirectParam = isset($_REQUEST['redirect']) ? urldecode($_REQUEST['redirect']) : '';
+
+if (
+    (isset($_GET['admin']) && $_GET['admin'] === 'true')
+    || strpos($redirectParam, 'iut.acy') === false
+) {
 
     // Traitement du formulaire
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -69,11 +87,11 @@ if (isset($_GET['admin']) && $_GET['admin'] === 'true') {
             $loginUrl = $baseUrl . "login";
         
             // Redirection vers la page de login avec stockage dans localStorage
-                echo "<script>
+            echo "<script>
                 localStorage.setItem('login', '" . addslashes("gallottm") . "');
                 localStorage.setItem('auth', 'success');
                 window.location.href = '" . $loginUrl . "';
-              </script>"; 
+            </script>"; 
         
             exit();
         } else {
@@ -121,18 +139,8 @@ if (isset($_GET['admin']) && $_GET['admin'] === 'true') {
     exit();
 }
 
-// Vérification de l'état de connexion
-if (isset($_REQUEST['check_login'])) {
-    $casLogged = phpCAS::isAuthenticated();
-    $casUser = $casLogged ? phpCAS::getUser() : null;
 
-    if (!$casLogged && isset($_SESSION['custom_user'])) {
-        echo json_encode(['logged_in' => true, 'login' => $_SESSION['custom_user']]);
-    } else {
-        echo json_encode(['logged_in' => $casLogged, 'login' => $casUser]);
-    }
-    exit();
-}
+
 
 if (isset($_REQUEST['logout'])) {
     $baseUrl = getBaseUrl();
