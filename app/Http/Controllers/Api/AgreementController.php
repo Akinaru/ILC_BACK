@@ -61,7 +61,7 @@ class AgreementController extends Controller
         if (!empty($departments)) {
             $query->whereHas('departments', function ($q) use ($departments) {
                 $q->whereIn('dept_shortname', $departments)
-                ->wherePivot('deptagree_valide', true);
+                ->where('t_j_deptagreement_deptagree.deptagree_valide', true);
             });
         }
 
