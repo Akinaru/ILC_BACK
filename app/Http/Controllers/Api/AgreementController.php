@@ -74,11 +74,14 @@ public function indexFiltered(Request $request)
         });
     }
 
-    // Tri par nom de pays partenaire (null safe)
-    $query->leftJoin('universities', 'agreements.university_id', '=', 'universities.id')
-          ->leftJoin('partnercountries', 'universities.partnercountry_id', '=', 'partnercountries.id')
-          ->orderByRaw('COALESCE(partnercountries.parco_name, \'\') ASC')
-          ->select('agreements.*');
+    $agreementsTable = (new Agreement)->getTable();
+    $universitiesTable = (new University)->getTable();
+    $partnerCountriesTable = (new PartnerCountry)->getTable();
+
+    $query->leftJoin("{$universitiesTable} as u", "{$agreementsTable}.univ_id", '=', 'u.univ_id')
+        ->leftJoin("{$partnerCountriesTable} as p", 'u.parco_id', '=', 'p.parco_id')
+        ->orderByRaw("COALESCE(p.parco_name, '') ASC")
+        ->select("{$agreementsTable}.*");
 
     // Pagination SQL native
     $paginated = $query->paginate($perPage, ['*'], 'page', $page);
