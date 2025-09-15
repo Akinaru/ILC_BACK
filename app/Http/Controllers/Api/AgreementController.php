@@ -50,49 +50,54 @@ class AgreementController extends Controller
 
 public function indexFiltered(Request $request)
 {
-    $departments = (array) $request->query('departments', []);
-    $countries = (array) $request->query('countries', []);
-    $page = max(1, (int) $request->query('page', 1));
-    $perPage = max(1, (int) $request->query('perPage', 20));
+    $departments = array_values(array_filter((array) $request->query('departments', [])));
+    $countries   = array_values(array_filter((array) $request->query('countries', [])));
+    $page        = max(1, (int) $request->query('page', 1));
+    $perPage     = max(1, (int) $request->query('perPage', 20));
 
-    // Requête de base
     $query = Agreement::query()
-        ->with(['university.partnercountry']);
+        ->with(['university.partnercountry', 'departments']);
 
-    // 🔹 Filtre départements (many-to-many, uniquement valides)
     if (!empty($departments)) {
-        $query->whereHas('departmentsNotOrdered', function ($q) use ($departments) {
-            $q->whereIn('dept_shortname', $departments)
-              ->where('deptagree_valide', 1);
+        $query->whereHas('departments', function ($q) use ($departments) {
+            $q->whereIn('dept_shortname', $departments);
         });
     }
 
-    // 🔹 Filtre pays partenaires via university -> partnercountry -> parco_name
     if (!empty($countries)) {
         $query->whereHas('university.partnercountry', function ($q) use ($countries) {
             $q->whereIn('parco_name', $countries);
         });
     }
 
-    $agreementsTable = (new Agreement)->getTable();
-    $universitiesTable = (new University)->getTable();
-    $partnerCountriesTable = (new PartnerCountry)->getTable();
+    // On récupère, on trie par nom de pays (nulls en dernier), puis on pagine.
+    $agreements = $query->get()->sortBy(function ($agreement) {
+        $name = optional(optional($agreement->university)->partnercountry)->parco_name;
+        return $name === null ? 'ZZZZZZ' : mb_strtoupper($name);
+    }, SORT_NATURAL)->values();
 
-    $query->leftJoin("{$universitiesTable} as u", "{$agreementsTable}.univ_id", '=', 'u.univ_id')
-        ->leftJoin("{$partnerCountriesTable} as p", 'u.parco_id', '=', 'p.parco_id')
-        ->orderByRaw("COALESCE(p.parco_name, '') ASC")
-        ->select("{$agreementsTable}.*");
+    $total    = $agreements->count();
+    $lastPage = max(1, (int) ceil($total / $perPage));
 
-    // Pagination SQL native
-    $paginated = $query->paginate($perPage, ['*'], 'page', $page);
+    if ($page > $lastPage) {
+        $page = $lastPage;
+    }
 
-    // Ressources
+    $results = $agreements->slice(($page - 1) * $perPage, $perPage)->values();
+
+    $paginated = new \Illuminate\Pagination\LengthAwarePaginator(
+        $results,
+        $total,
+        $perPage,
+        $page,
+        ['path' => $request->url(), 'query' => array_merge($request->query(), ['page' => $page])]
+    );
+
     $agreementCollection = AgreementResource::collection($paginated->items());
 
     return response()->json([
-        'agreements' => $agreementCollection,
-        'count_current' => $paginated->count(),   // éléments sur cette page
-        'count_total'   => $paginated->total(),   // total global
+        'agreements'    => $agreementCollection->toArray($request),
+        'count'         => $paginated->total(),
         'current_page'  => $paginated->currentPage(),
         'per_page'      => $paginated->perPage(),
         'last_page'     => $paginated->lastPage(),
