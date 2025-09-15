@@ -48,61 +48,62 @@ class AgreementController extends Controller
 
 
 
-public function indexFiltered(Request $request)
-{
-    $departments = array_values(array_filter((array) $request->query('departments', [])));
-    $countries   = array_values(array_filter((array) $request->query('countries', [])));
-    $page        = max(1, (int) $request->query('page', 1));
-    $perPage     = max(1, (int) $request->query('perPage', 20));
+    public function indexFiltered(Request $request)
+    {
+        $departments = array_values(array_filter((array) $request->query('departments', [])));
+        $countries   = array_values(array_filter((array) $request->query('countries', [])));
+        $page        = max(1, (int) $request->query('page', 1));
+        $perPage     = max(1, (int) $request->query('perPage', 20));
 
-    $query = Agreement::query()
-        ->with(['university.partnercountry', 'departments']);
+        $query = Agreement::query()
+            ->with(['university.partnercountry', 'departments']);
 
-    if (!empty($departments)) {
-        $query->whereHas('departments', function ($q) use ($departments) {
-            $q->whereIn('dept_shortname', $departments);
-        });
+        if (!empty($departments)) {
+            $query->whereHas('departments', function ($q) use ($departments) {
+                $q->whereIn('dept_shortname', $departments)
+                ->wherePivot('deptagree_valide', true);
+            });
+        }
+
+        if (!empty($countries)) {
+            $query->whereHas('university.partnercountry', function ($q) use ($countries) {
+                $q->whereIn('parco_name', $countries);
+            });
+        }
+
+        // On récupère, on trie par nom de pays (nulls en dernier), puis on pagine.
+        $agreements = $query->get()->sortBy(function ($agreement) {
+            $name = optional(optional($agreement->university)->partnercountry)->parco_name;
+            return $name === null ? 'ZZZZZZ' : mb_strtoupper($name);
+        }, SORT_NATURAL)->values();
+
+        $total    = $agreements->count();
+        $lastPage = max(1, (int) ceil($total / $perPage));
+
+        if ($page > $lastPage) {
+            $page = $lastPage;
+        }
+
+        $results = $agreements->slice(($page - 1) * $perPage, $perPage)->values();
+
+        $paginated = new \Illuminate\Pagination\LengthAwarePaginator(
+            $results,
+            $total,
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => array_merge($request->query(), ['page' => $page])]
+        );
+
+        $agreementCollection = AgreementResource::collection($paginated->items());
+
+        return response()->json([
+            'agreements'    => $agreementCollection->toArray($request),
+            'count'         => $paginated->total(),
+            'current_page'  => $paginated->currentPage(),
+            'per_page'      => $paginated->perPage(),
+            'last_page'     => $paginated->lastPage(),
+        ]);
     }
-
-    if (!empty($countries)) {
-        $query->whereHas('university.partnercountry', function ($q) use ($countries) {
-            $q->whereIn('parco_name', $countries);
-        });
-    }
-
-    // On récupère, on trie par nom de pays (nulls en dernier), puis on pagine.
-    $agreements = $query->get()->sortBy(function ($agreement) {
-        $name = optional(optional($agreement->university)->partnercountry)->parco_name;
-        return $name === null ? 'ZZZZZZ' : mb_strtoupper($name);
-    }, SORT_NATURAL)->values();
-
-    $total    = $agreements->count();
-    $lastPage = max(1, (int) ceil($total / $perPage));
-
-    if ($page > $lastPage) {
-        $page = $lastPage;
-    }
-
-    $results = $agreements->slice(($page - 1) * $perPage, $perPage)->values();
-
-    $paginated = new \Illuminate\Pagination\LengthAwarePaginator(
-        $results,
-        $total,
-        $perPage,
-        $page,
-        ['path' => $request->url(), 'query' => array_merge($request->query(), ['page' => $page])]
-    );
-
-    $agreementCollection = AgreementResource::collection($paginated->items());
-
-    return response()->json([
-        'agreements'    => $agreementCollection->toArray($request),
-        'count'         => $paginated->total(),
-        'current_page'  => $paginated->currentPage(),
-        'per_page'      => $paginated->perPage(),
-        'last_page'     => $paginated->lastPage(),
-    ]);
-}
 
     
     public function agreementHome()
