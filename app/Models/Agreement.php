@@ -32,6 +32,12 @@ class Agreement extends Model
                     ->orderBy('dept_name');
     }
 
+    public function departmentsNotOrdered()
+    {
+        return $this->belongsToMany(Department::class, 't_j_deptagreement_deptagree', 'agree_id', 'dept_id')
+                    ->withPivot('deptagree_valide');
+    }
+
     public function departmentsShortName()
     {
         return $this->belongsToMany(Department::class, 't_j_deptagreement_deptagree', 'agree_id', 'dept_id')
