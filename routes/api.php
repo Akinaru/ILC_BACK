@@ -318,9 +318,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/documents/checkexistperso/{folder}/{filename}', [DocumentsController::class, 'checkFileExistsPerso']);
     Route::get('/documents/delete/{folder}/{filename}', [DocumentsController::class, 'delete']);
     Route::get('/documents/deleteperso/{folder}/{filename}', [DocumentsController::class, 'deletePerso']);
-    Route::get('/documents/get/{folder}/{filename}', [DocumentsController::class, 'getDocument']);
     Route::get('/documents/getperso/etu/{folder}/{filename}', [DocumentsController::class, 'getMyDocument']);
 });
+Route::get('/documents/get/{folder}/{filename}', [DocumentsController::class, 'getDocument']);
 
 /** ================================================================================================ */
 /** Routes gestion documents pour articles */
