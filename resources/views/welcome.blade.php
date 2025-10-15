@@ -196,7 +196,13 @@
                 Les badges « Protégée » détectent les middlewares commençant par <code class="kbd">auth</code> (ex. <code class="kbd">auth:sanctum</code>).  
                 Le badge « Admin » est affiché si <code class="kbd">auth*</code> et un <code class="kbd">role:admin</code> sont présents.
             </div>
+
+      
         </div>
+              <div style="margin-top:1rem; font-size:.9rem; color:#6b7280;">
+                API version : <strong>{{ config('version.version') }}</strong>
+                <span class="muted">({{ app()->environment() }})</span>
+            </div>
     </div>
 </body>
 </html>
