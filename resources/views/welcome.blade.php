@@ -200,8 +200,7 @@
       
         </div>
               <div style="margin-top:1rem; font-size:.9rem; color:#6b7280;">
-                API version : <strong>{{ config('version.version') }}</strong>
-                <span class="muted">({{ app()->environment() }})</span>
+                API version : <strong>{{ config('version.version') }}-{{ app()->environment() }}</strong>
             </div>
     </div>
 </body>
